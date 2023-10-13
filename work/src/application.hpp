@@ -20,8 +20,19 @@ struct basic_model {
 	glm::vec3 color{0.7};
 	glm::mat4 modelTransform{1.0};
 	GLuint texture;
+	int mode = 0;
+	GLFWwindow* window;
+
+	glm::vec3 lightPos{ -15.f, 20.f, -0.f };
+	float near = 1.0f;
+	float far = 50.f;
+	float depth = 15.f;
 
 	void draw(const glm::mat4 &view, const glm::mat4 proj);
+
+	bool depthMode = false;
+
+	int searchRegion = 4;
 };
 
 
@@ -49,6 +60,8 @@ private:
 
 	// geometry
 	basic_model m_model;
+
+	int mode = 0;
 
 public:
 	// setup

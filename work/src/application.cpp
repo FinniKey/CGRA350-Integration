@@ -1,4 +1,4 @@
-// test commit
+
 // std
 #include <iostream>
 #include <string>
@@ -15,53 +15,198 @@
 #include "cgra/cgra_image.hpp"
 #include "cgra/cgra_shader.hpp"
 #include "cgra/cgra_wavefront.hpp"
+#include <imgui/imgui_internal.h>
 
 
 using namespace std;
 using namespace cgra;
 using namespace glm;
 
+static int frame = 0;
+static int next = 1;
+static int segment = 0;
 
-void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
+void basic_model::draw(const glm::mat4& view, const glm::mat4 proj) {
 	mat4 modelview = view * modelTransform;
-	
+
 	glUseProgram(shader); // load shader and variables
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelTransform"), 1, false, value_ptr(modelTransform));
 	glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(color));
+	glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, value_ptr(normalize(lightPos)));
 
-	mesh.draw(); // draw
+	glUniform1i(glGetUniformLocation(shader, "uSearchRegion"), searchRegion);
+	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
+
+	static unsigned int depthMapFBO;
+
+	static bool depthGen = false;
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	vec2 mapSize = vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT);
+	glUniform2fv(glGetUniformLocation(shader, "mapSize"), 1, value_ptr(mapSize));
+	static unsigned int depthMap;
+
+	if (!depthGen) {
+		glGenFramebuffers(1, &depthMapFBO);
+		glGenTextures(1, &depthMap);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+			SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		depthGen = true;
+	}
+	//cout << depthMapFBO << endl;
+
+	// 1. first render to depth map
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_FRONT);
+
+	// configure matrices
+	glm::vec3 lightInvDir = lightPos;
+	// Compute the MVP matrix from the light's point of view
+	float near_plane = near, far_plane = far;
+	float d = depth;
+	glm::mat4 depthProjectionMatrix = glm::ortho(-d, d, -d, d, near_plane, far_plane);
+
+	glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir,
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix;
+
+	// Send our transformation to the currently bound shader,
+	// in the "MVP" uniform
+	glUniformMatrix4fv(glGetUniformLocation(shader, "depthMVP"), 1, GL_FALSE, value_ptr(depthMVP));
+
+	// render scene pt 1
+	if (mode == 0) mesh.draw(); // draw
+	if (mode == 1) {
+		
+
+		// this just acts as the ground plane
+		mat4 cylinderTrans = rotate(mat4(1), radians(90.f), vec3(1, 0, 0)) * scale(mat4(1), vec3(10));
+		glUniformMatrix4fv(glGetUniformLocation(shader, "uModelTransformation"), 1, false, value_ptr(cylinderTrans));
+		glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(0, 1, 0)));
+		drawCylinder();
+
+		// these are the objects that will cast the shadows and stuff
+		mat4 sphereTrans;
+
+		
+		sphereTrans = translate(mat4(1.f), vec3(5, 1, 0));
+		glUniformMatrix4fv(glGetUniformLocation(shader, "uModelTransformation"), 1, false, value_ptr(sphereTrans));
+		glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(0, 1, 0)));
+		drawSphere();
+
+		sphereTrans = translate(mat4(1.f), vec3(2, 3, -2));
+		glUniformMatrix4fv(glGetUniformLocation(shader, "uModelTransformation"), 1, false, value_ptr(sphereTrans));
+		glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(0, 1, 0)));
+		drawSphere();
+
+		sphereTrans = translate(mat4(1.f), vec3(1, 6, -5)) * scale(mat4(1), vec3(3));
+		glUniformMatrix4fv(glGetUniformLocation(shader, "uModelTransformation"), 1, false, value_ptr(sphereTrans));
+		glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(0, 1, 0)));
+		drawSphere();
+		
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glCullFace(GL_BACK);
+	int width, height;
+	glfwGetFramebufferSize(window, &width, &height);
+	mat4 proj2 = perspective(1.f, float(width) / height, 0.1f, 1000.f);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj2));
+
+
+	glViewport(0, 0, width, height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glUniform1i(glGetUniformLocation(shader, "uTexture"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+
+	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 0);
+	if (depthMode) glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
+
+	if (mode == 0) mesh.draw(); // draw
+	if (mode == 1) {
+
+
+		// this just acts as the ground plane
+		mat4 cylinderTrans = rotate(mat4(1), radians(90.f), vec3(1, 0, 0)) * scale(mat4(1), vec3(10));
+		glUniformMatrix4fv(glGetUniformLocation(shader, "uModelTransformation"), 1, false, value_ptr(cylinderTrans));
+		glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(0, 1, 0)));
+		drawCylinder();
+
+		// these are the objects that will cast the shadows and stuff
+		mat4 sphereTrans;
+
+
+		sphereTrans = translate(mat4(1.f), vec3(5, 1, 0));
+		glUniformMatrix4fv(glGetUniformLocation(shader, "uModelTransformation"), 1, false, value_ptr(sphereTrans));
+		glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(0, 1, 0)));
+		drawSphere();
+
+		sphereTrans = translate(mat4(1.f), vec3(2, 3, -2));
+		glUniformMatrix4fv(glGetUniformLocation(shader, "uModelTransformation"), 1, false, value_ptr(sphereTrans));
+		glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(0, 1, 0)));
+		drawSphere();
+
+		sphereTrans = translate(mat4(1.f), vec3(1, 6, -5)) * scale(mat4(1), vec3(3));
+		glUniformMatrix4fv(glGetUniformLocation(shader, "uModelTransformation"), 1, false, value_ptr(sphereTrans));
+		glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(0, 1, 0)));
+		drawSphere();
+
+	}
+
 }
 
 
-Application::Application(GLFWwindow *window) : m_window(window) {
-	
+Application::Application(GLFWwindow* window) : m_window(window) {
+
 	shader_builder sb;
-    sb.set_shader(GL_VERTEX_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_vert.glsl"));
+	sb.set_shader(GL_VERTEX_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_vert.glsl"));
 	sb.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_frag.glsl"));
 	GLuint shader = sb.build();
 
 	m_model.shader = shader;
 	m_model.mesh = load_wavefront_data(CGRA_SRCDIR + std::string("/res//assets//teapot.obj")).build();
-	m_model.color = vec3(1, 0, 0);
+	m_model.color = vec3(1, 1, 0);
+	m_model.mode = 0;
 }
 
 
 void Application::render() {
-	
+
 	// retrieve the window hieght
 	int width, height;
-	glfwGetFramebufferSize(m_window, &width, &height); 
+	glfwGetFramebufferSize(m_window, &width, &height);
 
 	m_windowsize = vec2(width, height); // update window size
 	glViewport(0, 0, width, height); // set the viewport to draw to the entire window
 
 	// clear the back-buffer
 	glClearColor(0.3f, 0.3f, 0.4f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// enable flags for normal/forward rendering
-	glEnable(GL_DEPTH_TEST); 
+	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
 	// projection matrix
@@ -70,16 +215,15 @@ void Application::render() {
 	// view matrix
 	mat4 view = translate(mat4(1), vec3(0, 0, -m_distance))
 		* rotate(mat4(1), m_pitch, vec3(1, 0, 0))
-		* rotate(mat4(1), m_yaw,   vec3(0, 1, 0));
-
+		* rotate(mat4(1), m_yaw, vec3(0, 1, 0));
 
 	// helpful draw options
 	if (m_show_grid) drawGrid(view, proj);
 	if (m_show_axis) drawAxis(view, proj);
 	glPolygonMode(GL_FRONT_AND_BACK, (m_showWireframe) ? GL_LINE : GL_FILL);
+	
+	m_model.window = m_window;
 
-
-	// draw the model
 	m_model.draw(view, proj);
 }
 
@@ -88,7 +232,7 @@ void Application::renderGUI() {
 
 	// setup window
 	ImGui::SetNextWindowPos(ImVec2(5, 5), ImGuiSetCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(300, 700), ImGuiSetCond_Once);
 	ImGui::Begin("Options", 0);
 
 	// display current camera parameters
@@ -105,7 +249,7 @@ void Application::renderGUI() {
 	ImGui::SameLine();
 	if (ImGui::Button("Screenshot")) rgba_image::screenshot(true);
 
-	
+
 	ImGui::Separator();
 
 	// example of how to use input boxes
@@ -114,10 +258,28 @@ void Application::renderGUI() {
 		cout << "example input changed to " << exampleInput << endl;
 	}
 
+	const char* items[] = { "Default", "Other", "Light perspective"};
+
+	if (ImGui::Combo("Mode", &mode, items, IM_ARRAYSIZE(items))) {
+		m_model.depthMode = false;
+		if (mode == 0) {
+			cout << "Changing to default teapot" << endl;
+			m_model.mesh = load_wavefront_data(CGRA_SRCDIR + std::string("/res//assets//teapot.obj")).build();
+			m_model.mode = 0;
+		}
+		if (mode == 1) m_model.mode = 1;
+		if (mode == 2) m_model.depthMode = true;
+	}
+
+	ImGui::SliderFloat3("Light Position", value_ptr(m_model.lightPos), -20, 20);
+	ImGui::SliderFloat("Near", &m_model.near, 1, 10);
+	ImGui::SliderFloat("Far", &m_model.far, 1, 50);
+	ImGui::SliderFloat("Depth", &m_model.depth, 10, 100);
+	ImGui::SliderInt("Search Region", &m_model.searchRegion, 2, 32);
+
 	// finish creating window
 	ImGui::End();
 }
-
 
 void Application::cursorPosCallback(double xpos, double ypos) {
 	if (m_leftMouseDown) {
