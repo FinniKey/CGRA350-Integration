@@ -46,6 +46,8 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj) {
 	vec2 mapSize = vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT);
 	glUniform2fv(glGetUniformLocation(shader, "mapSize"), 1, value_ptr(mapSize));
 	static unsigned int depthMap;
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	if (!depthGen) {
 		glGenFramebuffers(1, &depthMapFBO);
@@ -75,7 +77,6 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj) {
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_FRONT);
 
 	// configure matrices
 	glm::vec3 lightInvDir = lightPos;
@@ -127,6 +128,7 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj) {
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
@@ -137,7 +139,7 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj) {
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glUniform1i(glGetUniformLocation(shader, "uTexture"), 0);
+	glUniform1i(glGetUniformLocation(shader, "depthMap"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
 
