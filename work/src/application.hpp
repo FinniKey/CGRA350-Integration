@@ -8,12 +8,11 @@
 // project
 #include "opengl.hpp"
 #include "cgra/cgra_mesh.hpp"
-#include "skeleton_model.hpp"
 
 
-// Basic model that holds the shader, mesh and transform for drawing.
-// Can be copied and modified for adding in extra information for drawing
-// including textures for texture mapping etc.
+using namespace glm;
+using namespace std;
+
 struct basic_model {
 	GLuint shader = 0;
 	cgra::gl_mesh mesh;
@@ -21,9 +20,14 @@ struct basic_model {
 	glm::mat4 modelTransform{1.0};
 	GLuint texture;
 
+	//shader parameters
+	float scale = 5;
+	float heightScale = 0.0;
+	float tilingScale = 1;
+	float POMmaxLayers = 32;
+
 	void draw(const glm::mat4 &view, const glm::mat4 proj);
 };
-
 
 // Main application class
 //
@@ -36,7 +40,7 @@ private:
 	// oribital camera
 	float m_pitch = .86;
 	float m_yaw = -.86;
-	float m_distance = 20;
+	float m_distance = 2;
 
 	// last input
 	bool m_leftMouseDown = false;
@@ -48,7 +52,10 @@ private:
 	bool m_showWireframe = false;
 
 	// geometry
-	basic_model m_model;
+	basic_model m_groundPlane;
+
+
+
 
 public:
 	// setup

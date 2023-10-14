@@ -16,6 +16,8 @@
 #include "cgra/cgra_shader.hpp"
 #include "cgra/cgra_wavefront.hpp"
 
+#include "geometry.h"
+
 
 using namespace std;
 using namespace cgra;
@@ -30,6 +32,20 @@ void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
 	glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(color));
 
+	vec3 lightPosition = vec3(5.0f, 10.0f, 10.0f);
+	glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, value_ptr(lightPosition));
+
+	vec3 cameraPos = inverse(view)[3];
+	glUniform3fv(glGetUniformLocation(shader, "viewPosition"), 1, value_ptr(cameraPos));
+
+	glUniform1f(glGetUniformLocation(shader, "heightScale"), heightScale);
+	glUniform1f(glGetUniformLocation(shader, "tilingScale"), tilingScale);
+	glUniform1f(glGetUniformLocation(shader, "POMmaxLayers"), POMmaxLayers);
+
+	glUniform1i(glGetUniformLocation(shader, "uTexture"), 0);
+	glUniform1i(glGetUniformLocation(shader, "uNormal"), 1);
+	glUniform1i(glGetUniformLocation(shader, "uHeight"), 2);
+
 	mesh.draw(); // draw
 }
 
@@ -41,15 +57,19 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	sb.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_frag.glsl"));
 	GLuint shader = sb.build();
 
-	m_model.shader = shader;
-	m_model.mesh = load_wavefront_data(CGRA_SRCDIR + std::string("/res//assets//teapot.obj")).build();
-	m_model.color = vec3(1, 0, 0);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_diff_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE0);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_nor_gl_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE1);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_disp_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE2);
+	m_groundPlane.shader = shader;
+	m_groundPlane.mesh = geometry::plane(m_groundPlane.scale, vec3(0, 0, 0));
 }
+
+
 
 
 void Application::render() {
 	
-	// retrieve the window hieght
+	// retrieve the window height
 	int width, height;
 	glfwGetFramebufferSize(m_window, &width, &height); 
 
@@ -72,15 +92,13 @@ void Application::render() {
 		* rotate(mat4(1), m_pitch, vec3(1, 0, 0))
 		* rotate(mat4(1), m_yaw,   vec3(0, 1, 0));
 
-
 	// helpful draw options
 	if (m_show_grid) drawGrid(view, proj);
 	if (m_show_axis) drawAxis(view, proj);
 	glPolygonMode(GL_FRONT_AND_BACK, (m_showWireframe) ? GL_LINE : GL_FILL);
 
-
 	// draw the model
-	m_model.draw(view, proj);
+	m_groundPlane.draw(view, proj);
 }
 
 
@@ -96,6 +114,11 @@ void Application::renderGUI() {
 	ImGui::SliderFloat("Pitch", &m_pitch, -pi<float>() / 2, pi<float>() / 2, "%.2f");
 	ImGui::SliderFloat("Yaw", &m_yaw, -pi<float>(), pi<float>(), "%.2f");
 	ImGui::SliderFloat("Distance", &m_distance, 0, 100, "%.2f", 2.0f);
+
+
+	ImGui::SliderFloat("POM Height", &m_groundPlane.heightScale, 0.0f, 0.25f, "%.4f");
+	ImGui::SliderFloat("POM Tiling Scale", &m_groundPlane.tilingScale, 0, 10, "%.2f", 2.0f);
+	ImGui::SliderFloat("POM Max Layers", &m_groundPlane.POMmaxLayers, 0, 64, "%.2f", 2.0f);
 
 	// helpful drawing options
 	ImGui::Checkbox("Show axis", &m_show_axis);
