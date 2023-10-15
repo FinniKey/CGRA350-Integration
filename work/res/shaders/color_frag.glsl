@@ -8,6 +8,7 @@ in VertexData {
     vec3 TangentLightPos;
     vec3 TangentViewPos;
     vec3 TangentFragPos;
+    vec4 FragPosLightSpace;
 } v_in;
 
 // Uniform data
@@ -26,6 +27,8 @@ float perlinNoise(vec2 p);
 
 uniform float uDepthMode;
 uniform sampler2D depthMap;
+uniform vec2 mapSize;
+uniform int uSearchRegion;
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 {
@@ -103,6 +106,51 @@ float shadowCalc(vec2 texCoord, vec3 lightDir)
     return r;
 }
 
+float ShadowCalculation(vec4 fragPosLightSpace, float bias)
+{
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+	float xOffset = 1.0 / mapSize.x;
+	float yOffset = 1.0 / mapSize.y;
+	float factor = 0.0;
+
+	for (int y = -uSearchRegion; y <= uSearchRegion; y++) {
+		for (int x = -uSearchRegion; x <= uSearchRegion; x++) {
+			vec2 Offsets = vec2(x * xOffset, y * yOffset);
+
+			float projOffsetX = projCoords.x + Offsets.x;
+			float projOffsetY = projCoords.y + Offsets.y;
+
+			//if ( projOffsetX > 0.0 && projOffsetX < 1.0 && projOffsetY > 0.0 && projOffsetY < 1.0 ) {
+
+				vec3 UVC = vec3(projCoords.xy + Offsets, projCoords.z + bias);
+				factor += texture(depthMap, UVC.xy).r;
+			//}
+		}
+	}
+
+
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(depthMap, projCoords.xy).r; 
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+
+	float singleLine = (uSearchRegion * 2) + 1;
+
+	shadow = 1.0 - (factor / (singleLine * singleLine));
+
+	if(projCoords.z > 1.0)
+        shadow = 0.0;
+
+    return shadow;
+}  
+
 void main() {
 
     if (uDepthMode == 1) {
@@ -149,6 +197,9 @@ void main() {
         float diff = max(dot(lightDir, normal), 0.0);
 
         //float shadow = diff > 0.0 ? shadowCalc(texCoords, lightDir) : 0.0;
+
+        float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005); 
+        float shadow = ShadowCalculation(v_in.FragPosLightSpace, bias);
     
         vec3 diffuse = diff * color;
 
@@ -159,7 +210,7 @@ void main() {
 
         vec3 specular = vec3(0.2) * spec;
 
-        vec3 finalColor = ambient + (diffuse + specular);
+        vec3 finalColor = ambient + (shadow) * (diffuse + specular);
 
         fragColor = vec4(finalColor, 1.0);
     }

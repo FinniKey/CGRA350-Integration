@@ -14,6 +14,7 @@ out VertexData {
     vec3 TangentLightPos;
     vec3 TangentViewPos;
     vec3 TangentFragPos;
+    vec4 FragPosLightSpace;
 } v_out;
 
 // uniform data
@@ -55,5 +56,8 @@ void main() {
         v_out.TangentLightPos = TBN * lightPos;
         v_out.TangentViewPos  = TBN * viewPos;
         v_out.TangentFragPos  = TBN * v_out.position;
+
+        // depth stuff
+        v_out.FragPosLightSpace = depthMVP * vec4(aPosition, 1);
     }
 }
