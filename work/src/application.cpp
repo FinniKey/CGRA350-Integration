@@ -15,6 +15,7 @@
 #include "cgra/cgra_image.hpp"
 #include "cgra/cgra_shader.hpp"
 #include "cgra/cgra_wavefront.hpp"
+#include <imgui/imgui_internal.h>
 
 #include "geometry.h"
 
@@ -25,6 +26,7 @@ using namespace glm;
 
 
 void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
+	// shader matrix setup
 	mat4 modelview = view * modelTransform;
 	
 	glUseProgram(shader); // load shader and variables
@@ -46,7 +48,82 @@ void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
 	glUniform1i(glGetUniformLocation(shader, "uNormal"), 1);
 	glUniform1i(glGetUniformLocation(shader, "uHeight"), 2);
 
+	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
+
+
+	// setup the depth map
+	static unsigned int depthMapFBO;
+
+	static bool depthGen = false;
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	vec2 mapSize = vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT);
+	glUniform2fv(glGetUniformLocation(shader, "mapSize"), 1, value_ptr(mapSize));
+	static unsigned int depthMap;
+
+	if (!depthGen) {
+		glGenFramebuffers(1, &depthMapFBO);
+		glGenTextures(1, &depthMap);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+			SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		depthGen = true;
+	}
+	////cout << depthMapFBO << endl;
+
+	// render to the depth map
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	// configure depth stuff
+	float near_plane = near, far_plane = far;
+	float d = depth;
+	glm::mat4 depthProjectionMatrix = glm::ortho(-d, d, -d, d, near_plane, far_plane);
+
+	glm::mat4 depthViewMatrix = glm::lookAt(lightPosition,
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix;
+
+	//// Send our transformation to the currently bound shader,
+	//// in the "MVP" uniform
+	glUniformMatrix4fv(glGetUniformLocation(shader, "depthMVP"), 1, GL_FALSE, value_ptr(depthMVP));
+
 	mesh.draw(); // draw
+
+	//// reset everything so it renders normally
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//
+	mat4 proj2 = perspective(1.f, windowWidth / windowHeight, 0.1f, 1000.f);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj2));
+
+	glViewport(0, 0, windowWidth, windowHeight);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	/*glUniform1i(glGetUniformLocation(shader, "depthMap"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, depthMap);*/
+
+	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 0);
+	if (depthMode) glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
+
+	mesh.draw();
+	
 }
 
 
@@ -72,6 +149,9 @@ void Application::render() {
 	// retrieve the window height
 	int width, height;
 	glfwGetFramebufferSize(m_window, &width, &height); 
+
+	m_groundPlane.windowHeight = height;
+	m_groundPlane.windowWidth = width;
 
 	m_windowsize = vec2(width, height); // update window size
 	glViewport(0, 0, width, height); // set the viewport to draw to the entire window
@@ -106,7 +186,7 @@ void Application::renderGUI() {
 
 	// setup window
 	ImGui::SetNextWindowPos(ImVec2(5, 5), ImGuiSetCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(300, 600), ImGuiSetCond_Once);
 	ImGui::Begin("Options", 0);
 
 	// display current camera parameters
@@ -136,6 +216,18 @@ void Application::renderGUI() {
 	if (ImGui::InputFloat("example input", &exampleInput)) {
 		cout << "example input changed to " << exampleInput << endl;
 	}
+
+	ImGui::Separator();
+
+	const char* items[] = { "Normal", "Light perspective" };
+	if (ImGui::Combo("Mode", &mode, items, IM_ARRAYSIZE(items))) {
+		m_groundPlane.depthMode = false;
+		if (mode == 1) m_groundPlane.depthMode = 1;
+	}
+
+	ImGui::SliderFloat("Near", &m_groundPlane.near, 1, 10);
+	ImGui::SliderFloat("Far", &m_groundPlane.far, 1, 50);
+	ImGui::SliderFloat("Depth", &m_groundPlane.depth, 1, 100);
 
 	// finish creating window
 	ImGui::End();

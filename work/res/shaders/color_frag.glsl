@@ -24,7 +24,8 @@ out vec4 fragColor;
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir);
 float perlinNoise(vec2 p);
 
-
+uniform float uDepthMode;
+uniform sampler2D depthMap;
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 {
@@ -104,55 +105,62 @@ float shadowCalc(vec2 texCoord, vec3 lightDir)
 
 void main() {
 
-    vec3 viewDir = normalize(v_in.TangentViewPos - v_in.TangentFragPos);
+    if (uDepthMode == 1) {
+		//float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
+		fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+	}
+    else {
 
-    vec2 scaledCoords = fract(v_in.textureCoord * tilingScale);
-    vec2 texCoords = scaledCoords;
+        vec3 viewDir = normalize(v_in.TangentViewPos - v_in.TangentFragPos);
+
+        vec2 scaledCoords = fract(v_in.textureCoord * tilingScale);
+        vec2 texCoords = scaledCoords;
 
 
-    texCoords = ParallaxMapping(scaledCoords, viewDir);
+        texCoords = ParallaxMapping(scaledCoords, viewDir);
 
-      // Add mirroring at the edges of tiles
-    if (texCoords.x > 1.0) {
-    texCoords.x = 2.0 - texCoords.x;
-    } else if (texCoords.x < 0.0) {
-    texCoords.x = -texCoords.x;
-    }
+          // Add mirroring at the edges of tiles
+        if (texCoords.x > 1.0) {
+        texCoords.x = 2.0 - texCoords.x;
+        } else if (texCoords.x < 0.0) {
+        texCoords.x = -texCoords.x;
+        }
 
-    if (texCoords.y > 1.0) {
-    texCoords.y = 2.0 - texCoords.y;
-    } else if (texCoords.y < 0.0) {
-        texCoords.y = -texCoords.y;
-    }
+        if (texCoords.y > 1.0) {
+        texCoords.y = 2.0 - texCoords.y;
+        } else if (texCoords.y < 0.0) {
+            texCoords.y = -texCoords.y;
+        }
 
-    vec2 ddx = dFdx(texCoords); // apparently removes ugly aliasing
-	vec2 ddy = dFdy(texCoords);
+        vec2 ddx = dFdx(texCoords); // apparently removes ugly aliasing
+	    vec2 ddy = dFdy(texCoords);
 
-    vec3 normal = textureGrad(uNormal, texCoords, ddx, ddy).rgb;
-    normal = normalize(normal * 2.0 - 1.0);
+        vec3 normal = textureGrad(uNormal, texCoords, ddx, ddy).rgb;
+        normal = normalize(normal * 2.0 - 1.0);
 
-    // get diffuse color
-    vec3 color = textureGrad(uTexture, texCoords, ddx, ddy).rgb;
+        // get diffuse color
+        vec3 color = textureGrad(uTexture, texCoords, ddx, ddy).rgb;
 
-    // ambient
-    vec3 ambient = 0.25 * color;
+        // ambient
+        vec3 ambient = 0.25 * color;
 
-    // diffuse
-    vec3 lightDir = normalize(v_in.TangentLightPos - v_in.TangentFragPos);
-    float diff = max(dot(lightDir, normal), 0.0);
+        // diffuse
+        vec3 lightDir = normalize(v_in.TangentLightPos - v_in.TangentFragPos);
+        float diff = max(dot(lightDir, normal), 0.0);
 
-    //float shadow = diff > 0.0 ? shadowCalc(texCoords, lightDir) : 0.0;
+        //float shadow = diff > 0.0 ? shadowCalc(texCoords, lightDir) : 0.0;
     
-    vec3 diffuse = diff * color;
+        vec3 diffuse = diff * color;
 
-    // specular    
-    vec3 reflectDir = reflect(-lightDir, normal);
-    vec3 halfwayDir = normalize(lightDir + viewDir);  
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
+        // specular    
+        vec3 reflectDir = reflect(-lightDir, normal);
+        vec3 halfwayDir = normalize(lightDir + viewDir);  
+        float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
 
-    vec3 specular = vec3(0.2) * spec;
+        vec3 specular = vec3(0.2) * spec;
 
-    vec3 finalColor = ambient + (diffuse + specular);
+        vec3 finalColor = ambient + (diffuse + specular);
 
-    fragColor = vec4(finalColor, 1.0);
+        fragColor = vec4(finalColor, 1.0);
+    }
 }

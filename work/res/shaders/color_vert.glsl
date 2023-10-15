@@ -21,26 +21,39 @@ uniform mat4 uProjectionMatrix;
 uniform mat4 uModelViewMatrix;
 uniform vec3 uColor;
 
+uniform float uDepthMode;
+uniform mat4 depthMVP;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 
 void main() {
-	// transform vertex data to viewspace
-	//v_out.position = (uModelViewMatrix * vec4(aPosition, 1)).xyz;
-	//v_out.normal = normalize((uModelViewMatrix * vec4(aNormal, 0)).xyz);
 
-	// set the screenspace position (needed for converting to fragment data)
-	gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1);
-    v_out.position = (uModelViewMatrix * vec4(aPosition, 1)).xyz;
-    v_out.textureCoord = aTexCoord;
+    if (uDepthMode == 1) {
+		    v_out.position = (uModelViewMatrix * vec4(aPosition, 1)).xyz;
+		    v_out.normal = normalize((uModelViewMatrix * vec4(aNormal, 0)).xyz);
+		    v_out.textureCoord = aTexCoord;
+
+		    gl_Position = depthMVP * vec4(aPosition, 1);
+	    }
+    else {
+
+	    // transform vertex data to viewspace
+	    //v_out.position = (uModelViewMatrix * vec4(aPosition, 1)).xyz;
+	    //v_out.normal = normalize((uModelViewMatrix * vec4(aNormal, 0)).xyz);
+
+	    // set the screenspace position (needed for converting to fragment data)
+	    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1);
+        v_out.position = (uModelViewMatrix * vec4(aPosition, 1)).xyz;
+        v_out.textureCoord = aTexCoord;
     
-    vec3 T   = normalize(mat3(uModelViewMatrix) * aTangent);
-    vec3 B   = normalize(mat3(uModelViewMatrix) * aBitangent);
-    vec3 N   = normalize(mat3(uModelViewMatrix) * aNormal);
-    mat3 TBN = transpose(mat3(T, B, N));
+        vec3 T   = normalize(mat3(uModelViewMatrix) * aTangent);
+        vec3 B   = normalize(mat3(uModelViewMatrix) * aBitangent);
+        vec3 N   = normalize(mat3(uModelViewMatrix) * aNormal);
+        mat3 TBN = transpose(mat3(T, B, N));
 
-    v_out.TangentLightPos = TBN * lightPos;
-    v_out.TangentViewPos  = TBN * viewPos;
-    v_out.TangentFragPos  = TBN * v_out.position;
+        v_out.TangentLightPos = TBN * lightPos;
+        v_out.TangentViewPos  = TBN * viewPos;
+        v_out.TangentFragPos  = TBN * v_out.position;
+    }
 }

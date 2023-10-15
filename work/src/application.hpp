@@ -26,6 +26,15 @@ struct basic_model {
 	float tilingScale = 1;
 	float POMmaxLayers = 32;
 
+	// soft shadow variables
+	int searchRegion = 4;
+	float near = 10.0f;
+	float far = 20.f;
+	float depth = 5.f;
+	float windowHeight;
+	float windowWidth;
+	bool depthMode = false;
+
 	void draw(const glm::mat4 &view, const glm::mat4 proj);
 };
 
@@ -54,7 +63,7 @@ private:
 	// geometry
 	basic_model m_groundPlane;
 
-
+	int mode = 0;
 
 
 public:
