@@ -17,6 +17,7 @@
 #include "cgra/cgra_wavefront.hpp"
 
 #include "geometry.h"
+#include <imgui_internal.h>
 
 
 using namespace std;
@@ -43,6 +44,26 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 	glUniform1i(glGetUniformLocation(shader, "uTexture"), diff);
 	glUniform1i(glGetUniformLocation(shader, "uNormal"), normal);
 	glUniform1i(glGetUniformLocation(shader, "uHeight"), height);
+
+	// ------------------- start of depth map stuff
+
+	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 0);
+	if (depthMode) glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
+
+	//cout << near << endl;
+	float near_plane = near, far_plane = far;
+	float d = depth;
+	glm::mat4 depthProjectionMatrix = glm::ortho(-d, d, -d, d, near_plane, far_plane);
+
+	glm::mat4 depthViewMatrix = glm::lookAt(lightPosition,
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix;
+
+	glUniformMatrix4fv(glGetUniformLocation(shader, "depthMVP"), 1, GL_FALSE, value_ptr(depthMVP));
+
+	// ------------- end of depth map stuff
 
 	mat4 modelTransform = mat4(1.0f);
 	modelTransform = glm::translate(modelTransform, position);
@@ -246,6 +267,24 @@ void Application::renderGUI() {
 		cout << "example input changed to " << exampleInput << endl;
 	}
 
+
+	// depth stuff starts
+	ImGui::Separator();
+
+	const char* items[] = { "Default", "Light perspective" };
+
+	if (ImGui::Combo("Mode", &mode, items, IM_ARRAYSIZE(items))) {
+		depthMode = false;
+		if (mode == 0) depthMode = false;
+		if (mode == 1) depthMode = true;
+	}
+
+	ImGui::SliderFloat("Near", &near, 1, 10);
+	ImGui::SliderFloat("Far", &far, 1, 50);
+	ImGui::SliderFloat("Depth", &depth, 10, 100);
+
+	ImGui::Separator();
+	// depth stuff ends
 
 	// --------------- Ryan's IMGUI start-----------------------------------
 
@@ -1297,6 +1336,7 @@ cgra::gl_mesh Application::torus(int theta_subdiv, int phi_subdiv, float theta_r
 	//-----push indices - end -----------------------------------------------------------
 
 	m_model.mesh = mb.build();
+	return m_model.mesh;
 }
 
 
@@ -1449,6 +1489,7 @@ cgra::gl_mesh Application::sphere_oblong(int theta_subdiv, int phi_subdiv, float
 	//-----push indices - end -----------------------------------------------------------
 
 	m_model.mesh = mb.build();
+	return m_model.mesh;
 }
 
 

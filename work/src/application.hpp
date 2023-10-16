@@ -13,6 +13,12 @@
 using namespace glm;
 using namespace std;
 
+// depth stuff
+static float near = 1.0f;
+static float far = 50.f;
+static float depth = 15.f;
+static bool depthMode = false;
+
 struct basic_model {
 	GLuint shader = 3;
 	cgra::gl_mesh mesh;
@@ -23,6 +29,8 @@ struct basic_model {
 	float heightScale = 0.00;
 	float tilingScale = 1;
 	float POMmaxLayers = 32;
+
+	
 
 
 	void draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff, GLint normal, GLint height);
@@ -40,6 +48,9 @@ private:
 	float m_pitch = .86;
 	float m_yaw = -.86;
 	float m_distance = 2;
+
+	// depth stuff
+	int mode = 0;
 
 	//------ Ryan's parameters start--------------------
 	GLuint just_shader;
@@ -277,6 +288,7 @@ private:
 	basic_model m_groundPlane;
 
 
+
 public:
 	// setup
 	Application(GLFWwindow *);
@@ -336,8 +348,6 @@ public:
 	void log_pile(int num_bottom_logs, int log_subdiv, float log_radius, float log_length,
 		float log_x_position, float log_y_position, float log_z_position,
 		float log_x_rotation, float log_y_rotation, float log_z_rotation);
-
-
 
 	//-------- ryan's methods ends ---------------------------
 };

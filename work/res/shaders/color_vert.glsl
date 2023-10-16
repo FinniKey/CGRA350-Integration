@@ -42,5 +42,5 @@ void main() {
 
     v_out.TangentLightPos = TBN * lightPos;
     v_out.TangentViewPos  = TBN * viewPos;
-    v_out.TangentFragPos  = TBN * v_out.position;
+    v_out.TangentFragPos  = TBN * v_out.position;  
 }
