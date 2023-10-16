@@ -41,6 +41,7 @@ struct basic_model {
 	void draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff, GLint normal, GLint height);
 };
 
+
 // Main application class
 //
 class Application {
@@ -330,6 +331,20 @@ private:
 
 
 public:
+
+
+	struct boid {
+		int id;
+		basic_model model;
+		vec3 pos = vec3(0);
+		vec3 vel = vec3(0);
+		vec3 acc = vec3(0);
+	};
+
+	int boidNum = 5;
+	vector<boid> boids;
+	void spawnBoids(int numBoids);
+
 	// setup
 	Application(GLFWwindow *);
 

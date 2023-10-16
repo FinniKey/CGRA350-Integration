@@ -18,6 +18,7 @@
 
 #include "geometry.h"
 #include <imgui_internal.h>
+#include <glm/gtc/random.hpp>
 
 
 using namespace std;
@@ -134,6 +135,7 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 
 
 Application::Application(GLFWwindow *window) : m_window(window) {
+	srand(time(0));
 	
 	shader_builder sb;
     sb.set_shader(GL_VERTEX_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_vert.glsl"));
@@ -154,10 +156,38 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_disp_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
 
 	//cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//back.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
+
+	spawnBoids(boidNum);
 }
 
+void Application::spawnBoids(int numBoids) {
+	boids.clear();
+	cout << "spawn boid" << endl;
+	for (int i = 0; i < numBoids; i++) {
+		boid b;
+		b.id = i;
+		b.model.mesh = geometry::plane(0.5);
+		b.pos = linearRand(vec3(-1), vec3(1));
+		b.vel = vec3(0);
+		b.acc = vec3(0);
+		boids.push_back(b);
+	}
+}
 
+vec3 clampVector(vec3 v, float minVal, float maxVal) {
+	vec3 r = v;
 
+	if (v.x < minVal) r.x = minVal;
+	else if (v.x > maxVal) r.x = maxVal;
+
+	if (v.y < minVal) r.y = minVal;
+	else if (v.y > maxVal) r.y = maxVal;
+	
+	if (v.z < minVal) r.z = minVal;
+	else if (v.z > maxVal) r.z = maxVal;
+
+	return r;
+}
 
 void Application::render() {
 	
@@ -302,6 +332,107 @@ void Application::render() {
 
 	// --------- ryan's render end --------------------------------------
 
+	for (boid &b : boids) {
+		
+		
+		
+
+		b.model.shader = jamie_shader;
+
+		b.acc = glm::vec3(0);
+
+		glm::vec3 avoidance = glm::vec3(0);
+		glm::vec3 cohesion = glm::vec3(0);
+		glm::vec3 alignment = glm::vec3(0);
+
+		vector<boid> neighs;
+		// get neighs
+		float sightRadius = 0.1;
+		for (boid o : boids) {
+			float d = distance(b.pos, o.pos);
+			if (b.id != o.id && d <= sightRadius) {
+				neighs.push_back(o);
+			}
+		}
+		
+		cout << "neigh num " << neighs.size() << endl;
+
+		// avoidance
+		for (boid o : neighs) {
+			float weight = 1;
+			glm::vec3 displacement = b.pos - o.pos;
+			float distance = length(displacement);
+			avoidance += weight * (displacement / (distance * distance));
+		}
+
+		if (neighs.size() > 0) {
+
+			//cohesion
+			glm::vec3 avgBPos = glm::vec3(0);
+
+			for (boid curB : neighs) {
+				avgBPos += curB.pos;
+			}
+			avgBPos /= neighs.size();
+			cohesion = avgBPos - b.pos;
+
+			// alignment
+			vec3 avgBVel = vec3(0);
+			for (boid curB : neighs) {
+				avgBVel += curB.vel;
+			}
+			avgBVel /= neighs.size();
+			alignment = avgBVel - b.vel;
+
+			
+		}
+		//b.acc = (avoidance + cohesion + alignment);
+		
+
+		
+
+		// clamp and adjust positions
+		float minAcc = -0.01;
+		float maxAcc = 0.01;
+		float minSpeed = 0.05;
+		float maxSpeed = 0.5;
+
+		//b.vel += b.acc;
+
+		float speed = length(b.vel);
+
+		if (speed > maxSpeed) speed = maxSpeed;
+		if (speed < minSpeed) speed = minSpeed;
+
+		b.vel = speed * normalize(b.vel);
+
+		cout << "pos " << b.pos.x << " " << b.pos.y << " " << b.pos.z << endl;
+		cout << "vel " << b.vel.x << " " << b.vel.y << " " << b.vel.z << endl;
+		cout << "acc " << b.acc.x << " " << b.acc.y << " " << b.acc.z << endl;
+
+		b.pos += b.vel;
+		
+		// clamp position
+		// change later to be based on distance
+		vec3 sceneBound = vec3(5.0);
+		/*if (b.pos.x < -sceneBound.x || b.pos.x > sceneBound.x
+			|| b.pos.y < 1 || b.pos.y > sceneBound.y
+			|| b.pos.z < -sceneBound.z || b.pos.z > sceneBound.z) {
+
+			b.vel += (vec3(0) - b.pos) / vec3(100 / 0.4);
+		}*/
+		/*if (b.pos.x > sceneBound.x) b.pos.x = -sceneBound.x;
+		if (b.pos.x < -sceneBound.x) b.pos.x = sceneBound.x;
+
+		if (b.pos.y > sceneBound.y) b.pos.y = -sceneBound.y;
+		if (b.pos.y < -sceneBound.y) b.pos.y = sceneBound.y;
+
+		if (b.pos.z > sceneBound.z) b.pos.z = -sceneBound.z;
+		if (b.pos.z < -sceneBound.z) b.pos.z = sceneBound.z;*/
+
+		b.model.draw(view, proj, b.pos, 0, vec3(1, 0, 0), 0, 0, 0);
+	}
+
 
 
 }
@@ -342,6 +473,13 @@ void Application::renderGUI() {
 		cout << "example input changed to " << exampleInput << endl;
 	}
 
+	// boids stuff starts
+
+	if (ImGui::SliderInt("Boid num", &boidNum, 0, 10)) {
+		spawnBoids(boidNum);
+	}
+
+	// boids stuff ends
 
 	// depth stuff starts
 	ImGui::Separator();
