@@ -31,7 +31,7 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 	//glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
 	glUseProgram(shader); // load shader and variables
 
-	vec3 lightPosition = vec3(5.0f, 10.0f, 10.0f);
+	vec3 lightPosition = vec3(1.0f, 2.0f, 2.0f);
 	glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, value_ptr(lightPosition));
 
 	vec3 cameraPos = inverse(view)[3];
@@ -47,12 +47,54 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 
 	// ------------------- start of depth map stuff
 
-	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 0);
-	if (depthMode) glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
+	glUniform1i(glGetUniformLocation(shader, "uSearchRegion"), searchRegion);
+	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
+
+	//// setup the depth map
+	static unsigned int depthMapFBO;
+
+	static bool depthGen = false;
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	vec2 mapSize = vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT);
+	glUniform2fv(glGetUniformLocation(shader, "mapSize"), 1, value_ptr(mapSize));
+	static unsigned int depthMap;
+
+	if (!depthGen) {
+		glGenFramebuffers(1, &depthMapFBO); // Generate only one framebuffer
+		glGenTextures(1, &depthMap);        // Generate only one texture
+
+		// Configure depthMap texture
+		glActiveTexture(GL_TEXTURE3); // Use texture unit 3
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+		// Bind depthMap to the framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		depthGen = true;
+	}
+	//cout << depthMapFBO << endl;
+
+	//// render to the depth map
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
 
 	//cout << near << endl;
-	float near_plane = near, far_plane = far;
-	float d = depth;
+	float near_plane = mapnear, far_plane = mapfar;
+	float d = mapdepth;
 	glm::mat4 depthProjectionMatrix = glm::ortho(-d, d, -d, d, near_plane, far_plane);
 
 	glm::mat4 depthViewMatrix = glm::lookAt(lightPosition,
@@ -63,17 +105,31 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 
 	glUniformMatrix4fv(glGetUniformLocation(shader, "depthMVP"), 1, GL_FALSE, value_ptr(depthMVP));
 
+	mesh.draw();
+
+	//reset everything so it renders normally
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	// ------------- end of depth map stuff
 
 	mat4 modelTransform = mat4(1.0f);
 	modelTransform = glm::translate(modelTransform, position);
 	modelTransform = glm::rotate(modelTransform, glm::radians(rotationAngle), rotationAxis);
 	mat4 modelview = view * modelTransform;
-
+	mat4 proj2 = perspective(1.f, (float)wWidth / (float)wHeight, 0.1f, 1000.f);
 	
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj2));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
 	glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(color));
+	
+	glViewport(0, 0, wWidth, wHeight);
+
+	glUniform1i(glGetUniformLocation(shader, "depthMap"), 6);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, 6);
+
+	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 0);
+	if (depthMode) glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
 
 	mesh.draw(); // draw    // this gl_mesh method is defined in cgra_mesh.cpp
 }
@@ -99,7 +155,7 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_nor_gl_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE4);
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_disp_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE5);
 
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//back.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
+	//cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//back.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
 }
 
 
@@ -110,6 +166,8 @@ void Application::render() {
 	// retrieve the window height
 	int width, height;
 	glfwGetFramebufferSize(m_window, &width, &height); 
+	wWidth = width;
+	wHeight = height;
 
 	m_windowsize = vec2(width, height); // update window size
 	glViewport(0, 0, width, height); // set the viewport to draw to the entire window
@@ -279,9 +337,9 @@ void Application::renderGUI() {
 		if (mode == 1) depthMode = true;
 	}
 
-	ImGui::SliderFloat("Near", &near, 1, 10);
-	ImGui::SliderFloat("Far", &far, 1, 50);
-	ImGui::SliderFloat("Depth", &depth, 10, 100);
+	ImGui::SliderFloat("Near", &mapnear, 1, 10);
+	ImGui::SliderFloat("Far", &mapfar, 1, 50);
+	ImGui::SliderFloat("Depth", &mapdepth, 10, 100);
 
 	ImGui::Separator();
 	// depth stuff ends

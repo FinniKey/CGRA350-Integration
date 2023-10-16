@@ -19,6 +19,7 @@ out VertexData {
 	vec3 position;
 	vec3 normal;
 	vec2 textureCoord;
+	vec4 FragPosLightSpace;
 } v_out;
 
 void main() {
@@ -33,6 +34,8 @@ void main() {
 		v_out.position = (uModelViewMatrix * vec4(aPosition, 1)).xyz;
 		v_out.normal = normalize((uModelViewMatrix * vec4(aNormal, 0)).xyz);
 		v_out.textureCoord = aTexCoord;
+
+		v_out.FragPosLightSpace = depthMVP * vec4(aPosition, 1);
 
 		// set the screenspace position (needed for converting to fragment data)
 		gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1);

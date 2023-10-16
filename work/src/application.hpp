@@ -14,10 +14,13 @@ using namespace glm;
 using namespace std;
 
 // depth stuff
-static float near = 1.0f;
-static float far = 50.f;
-static float depth = 15.f;
+static float mapnear = 1.0f;
+static float mapfar = 50.0f;
+static float mapdepth = 15.0f;
 static bool depthMode = false;
+static int searchRegion = 4;
+static int wWidth;
+static int wHeight;
 
 struct basic_model {
 	GLuint shader = 3;
