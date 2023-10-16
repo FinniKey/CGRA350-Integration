@@ -64,7 +64,7 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 		glGenTextures(1, &depthMap);        // Generate only one texture
 
 		// Configure depthMap texture
-		glActiveTexture(GL_TEXTURE6); // Use texture unit 6
+		glActiveTexture(GL_TEXTURE7); // Use texture unit 6
 		glBindTexture(GL_TEXTURE_2D, depthMap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -111,7 +111,9 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 	mat4 modelTransform = mat4(1.0f);
 	modelTransform = glm::translate(modelTransform, position);
 	modelTransform = glm::rotate(modelTransform, glm::radians(rotationAngle), rotationAxis);
+
 	mat4 modelview = view * modelTransform;
+
 	mat4 proj2 = perspective(1.f, (float)wWidth / (float)wHeight, 0.1f, 1000.f);
 	
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj2));
@@ -120,9 +122,9 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 	
 	glViewport(0, 0, wWidth, wHeight);
 
-	glUniform1i(glGetUniformLocation(shader, "depthMap"), 6);
-	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_2D, 6);
+	glUniform1i(glGetUniformLocation(shader, "depthMap"), 7);
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, 7);
 
 	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 0);
 	if (depthMode) glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
@@ -142,14 +144,14 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	sb.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_frag_project.glsl"));
 	just_shader = sb.build();
 
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_diff_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE0);
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_nor_gl_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE1);
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_disp_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE2);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_diff_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE1);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_nor_gl_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE2);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_disp_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE3);
 
 
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_diff_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE3);
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_nor_gl_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE4);
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_disp_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE5);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_diff_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE4);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_nor_gl_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE5);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_disp_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
 
 	//cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//back.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
 }
@@ -193,14 +195,21 @@ void Application::render() {
 
 	// draw the model
 
+	// Jamies planes
+
 	m_groundPlane.shader = jamie_shader;
 	m_groundPlane.mesh = geometry::plane(10);
 
-	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -2.5f, 5.0f), -90.0f, glm::vec3(1, 0, 0), 3, 4, 5);
-	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -2.5f, -5.0f), 90.0f, glm::vec3(1, 0, 0), 3, 4, 5);
-	m_groundPlane.draw(view, proj, glm::vec3(-5.0f, -2.5f, 0.0f), -90.0f, glm::vec3(0, 0, 1), 3, 4, 5);
-	m_groundPlane.draw(view, proj, glm::vec3(5.0f, -2.5f, 0.0f), 90.0f, glm::vec3(0, 0, 1), 3, 4, 5);
-	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -.25f, 0.0f), 0.0f, glm::vec3(1, 0, 0), 0, 1, 2);
+	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -2.5f, 5.0f), -90.0f, glm::vec3(1, 0, 0), 4, 5, 6);
+	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -2.5f, -5.0f), 90.0f, glm::vec3(1, 0, 0), 4, 5, 6);
+	m_groundPlane.draw(view, proj, glm::vec3(-5.0f, -2.5f, 0.0f), -90.0f, glm::vec3(0, 0, 1), 4, 5, 6);
+	m_groundPlane.draw(view, proj, glm::vec3(5.0f, -2.5f, 0.0f), 90.0f, glm::vec3(0, 0, 1), 4, 5, 6);
+	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -.25f, 0.0f), 0.0f, glm::vec3(1, 0, 0), 1, 2, 3);
+
+
+	// Aidans particle system
+
+	p_system.draw(view, proj);
 
 	
 	//-------- ryan's render start -----------------------------------------

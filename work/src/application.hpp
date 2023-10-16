@@ -5,8 +5,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
 // project
 #include "opengl.hpp"
+#include "particle_system.hpp"
 #include "cgra/cgra_mesh.hpp"
 
 
@@ -29,8 +31,8 @@ struct basic_model {
 
 	//shader parameters
 	float scale = 5;
-	float heightScale = 0.00;
-	float tilingScale = 1;
+	float heightScale = 0.025;
+	float tilingScale = 2;
 	float POMmaxLayers = 32;
 
 	
@@ -58,6 +60,8 @@ private:
 	//------ Ryan's parameters start--------------------
 	GLuint just_shader;
 	GLuint jamie_shader;
+
+	Particle_System p_system;
 
 	float sphere_initial_draw = -0.01;
 	float cube_initial_draw = -0.01;
