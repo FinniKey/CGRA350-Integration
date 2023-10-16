@@ -48,9 +48,9 @@ private:
 	GLFWwindow *m_window;
 
 	// oribital camera
-	float m_pitch = .86;
-	float m_yaw = -.86;
-	float m_distance = 2;
+	float m_pitch = .11;
+	float m_yaw = -0.21;
+	float m_distance = 2.66;
 
 	// depth stuff
 	int mode = 0;
@@ -117,20 +117,20 @@ private:
 	// tree parameters start----------------------
 	bool is_tree = false;
 	int tree_subdiv = 12;
-	float tree_height = 1.5;
-	float tree_top_radius = 0.2;
-	float tree_bottom_radius = 0.25;
+	float tree_height = 2.57;
+	float tree_top_radius = 0.036;
+	float tree_bottom_radius = 0.124;
 	// branch parameters
-	int branch_subdiv = 6;
-	int num_branch_rows = 3;
-	float branches_start = 1.7;
-	float branches_end = 0.2;
-	float branch_top_radius = 0;
-	float branch_bottom_radius = 0.4;
+	int branch_subdiv = 7;
+	int num_branch_rows = 18;
+	float branches_start = 1.9;
+	float branches_end = 0.001;
+	float branch_top_radius = 0.05;
+	float branch_bottom_radius = 0.5;
 	float uniform_scale = 1.0;
-	float tree_x_position = 0.0;
-	float tree_y_position = 0.0;
-	float tree_z_position = 0.0;
+	float tree_x_position = -1.8;
+	float tree_y_position = 0.85;
+	float tree_z_position = -3.6;
 	float tree_position[3] = { tree_x_position, tree_y_position, tree_z_position };
 
 	//
@@ -163,25 +163,25 @@ private:
 
 	// ----chair start --------------------------
 	bool is_chair = false;
-	float seat_width = 0.2;
+	float seat_width = 1.2;
 	float seat_height = 0.02;
 	float seat_depth = 0.25;
 	float seat_x_position = 0.0;
 	float seat_y_position = 0.0;
-	float seat_z_position = 0.0;
+	float seat_z_position = -1.4;
 	float seat_position[3] = { seat_x_position, seat_y_position, seat_z_position };
 	float seat_x_rotation = 0.0;
 	float seat_y_rotation = 0.0;
 	float seat_z_rotation = 0.0;
 	float seat_rotation[3] = { seat_x_rotation, seat_y_rotation, seat_z_rotation };
 	float seat_x_rotation_2 = 0.0;
-	float seat_y_rotation_2 = 0.0;
+	float seat_y_rotation_2 = -100.0;
 	float seat_z_rotation_2 = 0.0;
 	float seat_rotation_2[3] = { seat_x_rotation_2, seat_y_rotation_2, seat_z_rotation_2 };
 	float leg_width_depth = 0.02;
 	float leg_height = 0.25;
-	float b_support_height = 0.3;
-	float b_support_rest_height = 0.15;
+	float b_support_height = 0.275;
+	float b_support_rest_height = 0.17;
 	float chair_uniform_scale = 1;
 	// ----chair end-------------------
 
@@ -189,23 +189,23 @@ private:
 	// ----table start --------------------------
 	bool is_table = false;
 	float table_initial_draw = -0.01;
-	float table_top_width = 0.2;
-	float table_top_height = 0.02;
-	float table_top_depth = 0.25;
-	float table_x_position = 0.0;
-	float table_y_position = 0.0;
-	float table_z_position = 0.0;
+	float table_top_width = 0.363;
+	float table_top_height = 0.026;
+	float table_top_depth = 0.962;
+	float table_x_position = -1.42;
+	float table_y_position = 0.19;
+	float table_z_position = 0.1;
 	float table_position[3] = { table_x_position, table_y_position, table_z_position };
 	float table_x_rotation = 0.0;
 	float table_y_rotation = 0.0;
 	float table_z_rotation = 0.0;
 	float table_rotation[3] = { table_x_rotation, table_y_rotation, table_z_rotation };
 	float table_x_rotation_2 = 0.0;
-	float table_y_rotation_2 = 0.0;
+	float table_y_rotation_2 = 53.6;
 	float table_z_rotation_2 = 0.0;
 	float table_rotation_2[3] = { table_x_rotation_2, table_y_rotation_2, table_z_rotation_2 };
 	float table_leg_width_depth = 0.02;
-	float table_leg_height = 0.25;
+	float table_leg_height = 0.4;
 	float table_uniform_scale = 1;
 	// ----table end-------------------
 
@@ -213,13 +213,13 @@ private:
 	//---- fire guard start ---------------
 	bool is_fire_guard = false;
 	float fire_guard_radius = 1.0;
-	int fire_guard_subdiv = 16;
-	int num_brick_rows = 1;
+	int fire_guard_subdiv = 42;
+	int num_brick_rows = 5;
 	float brick_width = 0.1;
 	float brick_height = 0.03;
-	float brick_depth = 0.06;
+	float brick_depth = 0.103;
 	float fire_guard_x_position = 0.0;
-	float fire_guard_y_position = 0.0;
+	float fire_guard_y_position = -0.25;
 	float fire_guard_z_position = 0.0;
 	float fire_guard_position[3] = { fire_guard_x_position, fire_guard_y_position, fire_guard_z_position };
 	float fire_guard_x_rotation = 0.0;
@@ -232,19 +232,47 @@ private:
 	// ---- log pile start-------------
 	bool is_log_pile = false;
 	float log_pile_initial_draw = -0.01;
-	int num_bottom_logs = 3;
+	int num_bottom_logs = 2;
 	int log_subdiv = 12;
-	float log_radius = 0.1;
+	float log_radius = 0.07;
 	float log_length = 0.5;
 	float log_x_position = 0.0;
-	float log_y_position = 0.0;
+	float log_y_position = -0.25;
 	float log_z_position = 0.0;
 	float log_position[3] = { log_x_position, log_y_position, log_z_position };
 	float log_x_rotation = 90;
 	float log_y_rotation = 0.0;
 	float log_z_rotation = 0.0;
 	float log_rotation[3] = { log_x_rotation, log_y_rotation, log_z_rotation };
+
 	// ---- log pile end-------------
+
+
+	//---window start-------
+	bool is_window = false;
+	float window_width = 1;
+	float window_height = 0.7;
+	float window_depth = 0.027;
+	float window_x_position = 0.4;
+	float window_y_position = 0.6;
+	float window_z_position = -5.0;
+	float window_position[3] = { window_x_position, window_y_position, window_z_position };
+	float window_x_rotation = 0.0;
+	float window_y_rotation = 0.0;
+	float window_z_rotation = 0.0;
+	float window_rotation[3] = { window_x_rotation, window_y_rotation, window_z_rotation };
+	float window_x_rotation_2 = 0.0;
+	float window_y_rotation_2 = 0.0;
+	float window_z_rotation_2 = 0.0;
+	float window_rotation_2[3] = { window_x_rotation_2, window_y_rotation_2, window_z_rotation_2 };
+	float window_outer_trim_width = 0.073;
+	float window_outer_trim_depth = 0.035;
+	float window_inner_trim_width = 0.035;
+	float window_inner_trim_depth = 0.03;
+	float window_uniform_scale = 1.0;
+	//---- window end-------------
+
+
 
 	//------- draw parent objects start--------------------------
 	basic_model m_model;
@@ -272,6 +300,11 @@ private:
 	// table
 	basic_model* bm_table_object_ptr;
 	vector<basic_model*> m_table_objects;
+
+
+	// window
+	basic_model* bm_window_object_ptr;
+	vector<basic_model*> m_window_objects;
 	//---------draw parent objects end----------------------
 
 
@@ -352,5 +385,17 @@ public:
 		float log_x_position, float log_y_position, float log_z_position,
 		float log_x_rotation, float log_y_rotation, float log_z_rotation);
 
+<<<<<<< Updated upstream
+=======
+	void window(float window_width, float window_height, float window_depth,
+		float window_x_position, float window_y_position, float window_z_position,
+		float window_x_rotation, float window_y_rotation, float window_z_rotation,
+		float window_x_rotation_2, float window_y_rotation_2, float window_z_rotation_2,
+		float outer_trim_width, float outer_trim_depth,
+		float inner_trim_width, float inner_trim_depth);
+
+
+
+>>>>>>> Stashed changes
 	//-------- ryan's methods ends ---------------------------
 };

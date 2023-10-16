@@ -279,6 +279,18 @@ void Application::render() {
 	}
 
 
+	// draw window objects
+	for (int i = 0; i < m_window_objects.size(); i++) {
+		if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+			m_window_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(1, 0, 0), 0, 1, 2);
+			//cout << "m_all_objects[i]->shader: " << m_all_objects[i]->shader << endl;
+		}
+		else {
+			cerr << "null pointer" << endl;
+		}
+	}
+
+
 	// --------- ryan's render end --------------------------------------
 
 
@@ -621,7 +633,7 @@ void Application::renderGUI() {
 				table_leg_width_depth, table_leg_height, table_uniform_scale);
 		}
 
-		if (ImGui::SliderFloat("Table Width", &table_top_width, 0.001, 10.0)) {
+		if (ImGui::SliderFloat("Table Width", &table_top_width, 0.001, 1.0)) {
 			for (int i = 0; i < m_table_objects.size(); i++) {
 				if (m_table_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
 					delete m_table_objects[i];
@@ -640,27 +652,7 @@ void Application::renderGUI() {
 				table_leg_width_depth, table_leg_height, table_uniform_scale);
 		}
 
-		if (ImGui::SliderFloat("Table Top Height", &table_top_height, 0.001, 0.50)) {
-
-			for (int i = 0; i < m_table_objects.size(); i++) {
-				if (m_table_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-					delete m_table_objects[i];
-				}
-				else {
-					cerr << "null pointer" << endl;
-				}
-			}
-			// Clear the vector of pointers
-			m_table_objects.clear();
-
-			table(table_top_width, table_top_height, table_top_depth,
-				table_position[0], table_position[1], table_position[2],
-				table_rotation[0], table_rotation[1], table_rotation[2],
-				table_rotation_2[0], table_rotation_2[1], table_rotation_2[2],
-				table_leg_width_depth, table_leg_height, table_uniform_scale);
-		}
-
-		if (ImGui::SliderFloat("Table Depth", &table_top_depth, 0.001, 10.0)) {
+		if (ImGui::SliderFloat("Table Top Height", &table_top_height, 0.001, 0.05)) {
 
 			for (int i = 0; i < m_table_objects.size(); i++) {
 				if (m_table_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -680,8 +672,7 @@ void Application::renderGUI() {
 				table_leg_width_depth, table_leg_height, table_uniform_scale);
 		}
 
-
-		if (ImGui::SliderFloat("Table Leg Width & Depth", &table_leg_width_depth, 0.001, 1.0)) {
+		if (ImGui::SliderFloat("Table Depth", &table_top_depth, 0.001, 2.0)) {
 
 			for (int i = 0; i < m_table_objects.size(); i++) {
 				if (m_table_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -701,7 +692,28 @@ void Application::renderGUI() {
 				table_leg_width_depth, table_leg_height, table_uniform_scale);
 		}
 
-		if (ImGui::SliderFloat("Table Leg Height", &table_leg_height, 0.001, 10.0)) {
+
+		if (ImGui::SliderFloat("Table Leg Width & Depth", &table_leg_width_depth, 0.001, 0.05)) {
+
+			for (int i = 0; i < m_table_objects.size(); i++) {
+				if (m_table_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_table_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_table_objects.clear();
+
+			table(table_top_width, table_top_height, table_top_depth,
+				table_position[0], table_position[1], table_position[2],
+				table_rotation[0], table_rotation[1], table_rotation[2],
+				table_rotation_2[0], table_rotation_2[1], table_rotation_2[2],
+				table_leg_width_depth, table_leg_height, table_uniform_scale);
+		}
+
+		if (ImGui::SliderFloat("Table Leg Height", &table_leg_height, 0.001, 1.0)) {
 
 			for (int i = 0; i < m_table_objects.size(); i++) {
 				if (m_table_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -799,7 +811,7 @@ void Application::renderGUI() {
 				b_support_height, b_support_rest_height, chair_uniform_scale);
 		}
 
-		if (ImGui::SliderFloat("Chair Seat Width", &seat_width, 0.001, 10.0)) {
+		if (ImGui::SliderFloat("Chair Seat Width", &seat_width, 0.001, 2.0)) {
 			for (int i = 0; i < m_chair_objects.size(); i++) {
 				if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
 					delete m_chair_objects[i];
@@ -819,28 +831,7 @@ void Application::renderGUI() {
 				b_support_height, b_support_rest_height, chair_uniform_scale);
 		}
 
-		if (ImGui::SliderFloat("Chair Seat Height", &seat_height, 0.001, 10.0)) {
-
-			for (int i = 0; i < m_chair_objects.size(); i++) {
-				if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-					delete m_chair_objects[i];
-				}
-				else {
-					cerr << "null pointer" << endl;
-				}
-			}
-			// Clear the vector of pointers
-			m_chair_objects.clear();
-
-			chair(seat_width, seat_height, seat_depth,
-				seat_position[0], seat_position[1], seat_position[2],
-				seat_rotation[0], seat_rotation[1], seat_rotation[2],
-				seat_rotation_2[0], seat_rotation_2[1], seat_rotation_2[2],
-				leg_width_depth, leg_height,
-				b_support_height, b_support_rest_height, chair_uniform_scale);
-		}
-
-		if (ImGui::SliderFloat("Chair Seat Depth", &seat_depth, 0.001, 10.0)) {
+		if (ImGui::SliderFloat("Chair Seat Height", &seat_height, 0.001, 0.1)) {
 
 			for (int i = 0; i < m_chair_objects.size(); i++) {
 				if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -861,29 +852,7 @@ void Application::renderGUI() {
 				b_support_height, b_support_rest_height, chair_uniform_scale);
 		}
 
-
-		if (ImGui::SliderFloat("Chair Leg Width & Depth", &leg_width_depth, 0.001, 10.0)) {
-
-			for (int i = 0; i < m_chair_objects.size(); i++) {
-				if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-					delete m_chair_objects[i];
-				}
-				else {
-					cerr << "null pointer" << endl;
-				}
-			}
-			// Clear the vector of pointers
-			m_chair_objects.clear();
-
-			chair(seat_width, seat_height, seat_depth,
-				seat_position[0], seat_position[1], seat_position[2],
-				seat_rotation[0], seat_rotation[1], seat_rotation[2],
-				seat_rotation_2[0], seat_rotation_2[1], seat_rotation_2[2],
-				leg_width_depth, leg_height,
-				b_support_height, b_support_rest_height, chair_uniform_scale);
-		}
-
-		if (ImGui::SliderFloat("Chair Leg Height", &leg_height, 0.001, 10.0)) {
+		if (ImGui::SliderFloat("Chair Seat Depth", &seat_depth, 0.001, 0.3)) {
 
 			for (int i = 0; i < m_chair_objects.size(); i++) {
 				if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -904,7 +873,8 @@ void Application::renderGUI() {
 				b_support_height, b_support_rest_height, chair_uniform_scale);
 		}
 
-		if (ImGui::SliderFloat("Chair Back Support Height", &b_support_height, 0.001, 10.0)) {
+
+		if (ImGui::SliderFloat("Chair Leg Width & Depth", &leg_width_depth, 0.001, 0.35)) {
 
 			for (int i = 0; i < m_chair_objects.size(); i++) {
 				if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -925,7 +895,49 @@ void Application::renderGUI() {
 				b_support_height, b_support_rest_height, chair_uniform_scale);
 		}
 
-		if (ImGui::SliderFloat("Chair Back Rest Height", &b_support_rest_height, 0.001, 10.0)) {
+		if (ImGui::SliderFloat("Chair Leg Height", &leg_height, 0.001, 0.5)) {
+
+			for (int i = 0; i < m_chair_objects.size(); i++) {
+				if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_chair_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_chair_objects.clear();
+
+			chair(seat_width, seat_height, seat_depth,
+				seat_position[0], seat_position[1], seat_position[2],
+				seat_rotation[0], seat_rotation[1], seat_rotation[2],
+				seat_rotation_2[0], seat_rotation_2[1], seat_rotation_2[2],
+				leg_width_depth, leg_height,
+				b_support_height, b_support_rest_height, chair_uniform_scale);
+		}
+
+		if (ImGui::SliderFloat("Chair Back Support Height", &b_support_height, 0.001, 0.5)) {
+
+			for (int i = 0; i < m_chair_objects.size(); i++) {
+				if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_chair_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_chair_objects.clear();
+
+			chair(seat_width, seat_height, seat_depth,
+				seat_position[0], seat_position[1], seat_position[2],
+				seat_rotation[0], seat_rotation[1], seat_rotation[2],
+				seat_rotation_2[0], seat_rotation_2[1], seat_rotation_2[2],
+				leg_width_depth, leg_height,
+				b_support_height, b_support_rest_height, chair_uniform_scale);
+		}
+
+		if (ImGui::SliderFloat("Chair Back Rest Height", &b_support_rest_height, 0.001, 0.5)) {
 
 			for (int i = 0; i < m_chair_objects.size(); i++) {
 				if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -983,46 +995,9 @@ void Application::renderGUI() {
 				fire_guard_rotation[0], fire_guard_rotation[1], fire_guard_rotation[2]);
 		}
 
-		if ((ImGui::SliderFloat3("Position", fire_guard_position, -5.0, 5.0))) {
-			for (int i = 0; i < m_fire_guard_objects.size(); i++) {
-				if (m_fire_guard_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-					delete m_fire_guard_objects[i];
-				}
-				else {
-					cerr << "null pointer" << endl;
-				}
-			}
-			// Clear the vector of pointers
-			m_fire_guard_objects.clear();
-
-			fire_guard(fire_guard_radius, fire_guard_subdiv, num_brick_rows,
-				brick_width, brick_height, brick_depth,
-				fire_guard_position[0], fire_guard_position[1], fire_guard_position[2],
-				fire_guard_rotation[0], fire_guard_rotation[1], fire_guard_rotation[2]);
-		}
 
 
-
-		if ((ImGui::SliderFloat3("Rotation", fire_guard_rotation, -360.0, 360.0))) {
-			// Deletion of objects after rendering
-			for (int i = 0; i < m_fire_guard_objects.size(); i++) {
-				if (m_fire_guard_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-					delete m_fire_guard_objects[i];
-				}
-				else {
-					cerr << "null pointer" << endl;
-				}
-			}
-			// Clear the vector of pointers
-			m_fire_guard_objects.clear();
-
-			fire_guard(fire_guard_radius, fire_guard_subdiv, num_brick_rows,
-				brick_width, brick_height, brick_depth,
-				fire_guard_position[0], fire_guard_position[1], fire_guard_position[2],
-				fire_guard_rotation[0], fire_guard_rotation[1], fire_guard_rotation[2]);
-		}
-
-		if (ImGui::SliderFloat("Radius", &fire_guard_radius, 0.001, 3.0)) {
+		if (ImGui::SliderFloat("Fire Guard Radius", &fire_guard_radius, 0.001, 3.0)) {
 			// Deletion of objects after rendering
 			for (int i = 0; i < m_fire_guard_objects.size(); i++) {
 				if (m_fire_guard_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -1060,7 +1035,7 @@ void Application::renderGUI() {
 				fire_guard_rotation[0], fire_guard_rotation[1], fire_guard_rotation[2]);
 		}
 
-		if (ImGui::SliderInt("Number of Bricks Rows", &num_brick_rows, 1, 5)) {
+		if (ImGui::SliderInt("Number of Brick Rows", &num_brick_rows, 1, 5)) {
 			// Deletion of objects after rendering
 			for (int i = 0; i < m_fire_guard_objects.size(); i++) {
 				if (m_fire_guard_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -1206,7 +1181,7 @@ void Application::renderGUI() {
 
 		}
 
-		if ((ImGui::SliderFloat3("Position", log_position, -5.0, 5.0))) {
+		if ((ImGui::SliderFloat3("Log Position", log_position, -5.0, 5.0))) {
 			// Deletion of objects after rendering
 			for (int i = 0; i < m_all_objects.size(); i++) {
 				if (m_log_pile_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -1224,7 +1199,8 @@ void Application::renderGUI() {
 
 		}
 
-		if ((ImGui::SliderFloat3("Rotation", log_rotation, -360.0, 360.0))) {
+
+		if (ImGui::SliderFloat("Log Radius", &log_radius, 0.001, 0.1)) {
 			// Deletion of objects after rendering
 			for (int i = 0; i < m_log_pile_objects.size(); i++) {
 				if (m_log_pile_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -1242,26 +1218,8 @@ void Application::renderGUI() {
 
 		}
 
-		if (ImGui::SliderFloat("Log Radius", &log_radius, 0.001, 0.3)) {
-			// Deletion of objects after rendering
-			for (int i = 0; i < m_log_pile_objects.size(); i++) {
-				if (m_log_pile_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-					delete m_log_pile_objects[i];
-				}
-				else {
-					cerr << "null pointer" << endl;
-				}
-			}
-			// Clear the vector of pointers
-			m_log_pile_objects.clear();
-			log_pile(num_bottom_logs, log_subdiv, log_radius, log_length,
-				log_position[0], log_position[1], log_position[2],
-				log_rotation[0], log_rotation[1], log_rotation[2]);
 
-		}
-
-
-		if (ImGui::SliderFloat("Log Length", &log_length, 0.001, 0.3)) {
+		if (ImGui::SliderFloat("Log Length", &log_length, 0.001, 0.8)) {
 			// Deletion of objects after rendering
 			for (int i = 0; i < m_log_pile_objects.size(); i++) {
 				if (m_log_pile_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
@@ -1281,6 +1239,236 @@ void Application::renderGUI() {
 	}
 
 	//---------- log pile end ------------------------------------------------
+
+
+
+	//------ window start-------------------------------------------
+
+	// window
+	if (ImGui::Button("Window")) {
+		is_window = true;
+		window_initial_draw = -0.01;
+
+
+	}
+	if (is_window) {
+
+		window_initial_draw += 0.01;
+		if (window_initial_draw > -0.01 && window_initial_draw < 0.005) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_x_position, window_y_position, window_z_position,
+				window_x_rotation, window_y_rotation, window_z_rotation,
+				window_x_rotation_2, window_y_rotation_2, window_z_rotation_2,
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+
+		if ((ImGui::SliderFloat3("Window Position", window_position, -5.0, 5.0))) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_position[0], window_position[1], window_position[2],
+				window_rotation[0], window_rotation[1], window_rotation[2],
+				window_rotation_2[0], window_rotation_2[1], window_rotation_2[2],
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+
+		if ((ImGui::SliderFloat3("Window Rotation", window_rotation_2, -360.0, 360.0))) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_position[0], window_position[1], window_position[2],
+				window_rotation[0], window_rotation[1], window_rotation[2],
+				window_rotation_2[0], window_rotation_2[1], window_rotation_2[2],
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+
+		if (ImGui::SliderFloat("Window Width", &window_width, 0.001, 1.0)) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_position[0], window_position[1], window_position[2],
+				window_rotation[0], window_rotation[1], window_rotation[2],
+				window_rotation_2[0], window_rotation_2[1], window_rotation_2[2],
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+
+		if (ImGui::SliderFloat("Window Height", &window_height, 0.001, 0.7)) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_position[0], window_position[1], window_position[2],
+				window_rotation[0], window_rotation[1], window_rotation[2],
+				window_rotation_2[0], window_rotation_2[1], window_rotation_2[2],
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+
+		if (ImGui::SliderFloat("Window Depth", &window_depth, 0.001, 0.1)) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_position[0], window_position[1], window_position[2],
+				window_rotation[0], window_rotation[1], window_rotation[2],
+				window_rotation_2[0], window_rotation_2[1], window_rotation_2[2],
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+
+		if (ImGui::SliderFloat("Window Outer Trim Width", &window_outer_trim_width, 0.001, 0.3)) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_position[0], window_position[1], window_position[2],
+				window_rotation[0], window_rotation[1], window_rotation[2],
+				window_rotation_2[0], window_rotation_2[1], window_rotation_2[2],
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+
+		if (ImGui::SliderFloat("Window Outer Trim Depth", &window_outer_trim_depth, 0.001, 0.2)) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_position[0], window_position[1], window_position[2],
+				window_rotation[0], window_rotation[1], window_rotation[2],
+				window_rotation_2[0], window_rotation_2[1], window_rotation_2[2],
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+
+		if (ImGui::SliderFloat("Window Inner Trim Width", &window_inner_trim_width, 0.001, 0.3)) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_position[0], window_position[1], window_position[2],
+				window_rotation[0], window_rotation[1], window_rotation[2],
+				window_rotation_2[0], window_rotation_2[1], window_rotation_2[2],
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+
+		if (ImGui::SliderFloat("Window Inner Trim Depth", &window_inner_trim_depth, 0.001, 0.2)) {
+			// Deletion of objects after rendering
+			for (int i = 0; i < m_window_objects.size(); i++) {
+				if (m_window_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
+					delete m_window_objects[i];
+				}
+				else {
+					cerr << "null pointer" << endl;
+				}
+			}
+			// Clear the vector of pointers
+			m_window_objects.clear();
+
+			window(window_width, window_height, window_depth,
+				window_position[0], window_position[1], window_position[2],
+				window_rotation[0], window_rotation[1], window_rotation[2],
+				window_rotation_2[0], window_rotation_2[1], window_rotation_2[2],
+				window_outer_trim_width, window_outer_trim_depth,
+				window_inner_trim_width, window_inner_trim_depth);
+		}
+	}
+
+
+	//------ window end-------------------------------------------
+
+
 
 
 
@@ -2326,6 +2514,95 @@ void Application::log_pile(int num_bottom_logs, int log_subdiv, float log_radius
 			curr_y_position += log_radius * 1.66;
 		}
 	}
+
+}
+
+
+
+
+void Application::window(float window_width, float window_height, float window_depth,
+	float window_x_position, float window_y_position, float window_z_position,
+	float window_x_rotation, float window_y_rotation, float window_z_rotation,
+	float window_x_rotation_2, float window_y_rotation_2, float window_z_rotation_2,
+	float outer_trim_width, float outer_trim_depth,
+	float inner_trim_width, float inner_trim_depth) {
+
+
+	// draw glass
+	bm_window_object_ptr = new basic_model;
+	bm_window_object_ptr->mesh = rectangular_prism(window_width - (window_outer_trim_width), window_height - (window_outer_trim_width), window_depth,
+		window_x_position, window_y_position, window_z_position,
+		window_x_rotation, window_y_rotation, window_z_rotation,
+		window_x_rotation_2, window_y_rotation_2, window_z_rotation_2, window_uniform_scale);
+	bm_window_object_ptr->color = vec3(0.36, 0.43, 0.58);    // assign color to object
+	bm_window_object_ptr->shader = just_shader;
+	m_window_objects.push_back(bm_window_object_ptr);      // append current basic_model object
+
+
+
+	// ----- draw 4 outer trim -----------
+	// bottom outer trim
+	bm_window_object_ptr = new basic_model;
+	bm_window_object_ptr->mesh = rectangular_prism(window_width, window_outer_trim_width, window_outer_trim_depth,
+		window_x_position, window_y_position - (window_height * 0.5), window_z_position,
+		window_x_rotation, window_y_rotation, window_z_rotation,
+		window_x_rotation_2, window_y_rotation_2, window_z_rotation_2, window_uniform_scale);
+	bm_window_object_ptr->color = vec3(0.1, 0.1, 0.1);    // assign color to object
+	bm_window_object_ptr->shader = just_shader;
+	m_window_objects.push_back(bm_window_object_ptr);      // append current basic_model object
+
+
+	// top outer trim
+	bm_window_object_ptr = new basic_model;
+	bm_window_object_ptr->mesh = rectangular_prism(window_width, window_outer_trim_width, window_outer_trim_depth,
+		window_x_position, window_y_position + (window_height * 0.5), window_z_position,
+		window_x_rotation, window_y_rotation, window_z_rotation,
+		window_x_rotation_2, window_y_rotation_2, window_z_rotation_2, window_uniform_scale);
+	bm_window_object_ptr->color = vec3(0.1, 0.1, 0.1);    // assign color to object
+	bm_window_object_ptr->shader = just_shader;
+	m_window_objects.push_back(bm_window_object_ptr);      // append current basic_model object
+
+	// right outer trim
+	bm_window_object_ptr = new basic_model;
+	bm_window_object_ptr->mesh = rectangular_prism(outer_trim_width, window_height + outer_trim_width, outer_trim_depth,
+		window_x_position + (window_width * 0.5), window_y_position, window_z_position,
+		window_x_rotation, window_y_rotation, window_z_rotation,
+		window_x_rotation_2, window_y_rotation_2, window_z_rotation_2, window_uniform_scale);
+	bm_window_object_ptr->color = vec3(0.1, 0.1, 0.1);    // assign color to object
+	bm_window_object_ptr->shader = just_shader;
+	m_window_objects.push_back(bm_window_object_ptr);      // append current basic_model object
+
+	// left outer trim
+	bm_window_object_ptr = new basic_model;
+	bm_window_object_ptr->mesh = rectangular_prism(outer_trim_width, window_height + outer_trim_width, outer_trim_depth,
+		window_x_position - (window_width * 0.5), window_y_position, window_z_position,
+		window_x_rotation, window_y_rotation, window_z_rotation,
+		window_x_rotation_2, window_y_rotation_2, window_z_rotation_2, window_uniform_scale);
+	bm_window_object_ptr->color = vec3(0.1, 0.1, 0.1);    // assign color to object
+	bm_window_object_ptr->shader = just_shader;
+	m_window_objects.push_back(bm_window_object_ptr);      // append current basic_model object
+
+	// draw inner trim
+	// vertical inner trim
+	bm_window_object_ptr = new basic_model;
+	bm_window_object_ptr->mesh = rectangular_prism(inner_trim_width, window_height - (outer_trim_width), inner_trim_depth,
+		window_x_position, window_y_position, window_z_position,
+		window_x_rotation, window_y_rotation, window_z_rotation,
+		window_x_rotation_2, window_y_rotation_2, window_z_rotation_2, window_uniform_scale);
+	bm_window_object_ptr->color = vec3(0.1, 0.1, 0.1);    // assign color to object
+	bm_window_object_ptr->shader = just_shader;
+	m_window_objects.push_back(bm_window_object_ptr);      // append current basic_model object
+
+	// horizontal inner trim
+	bm_window_object_ptr = new basic_model;
+	bm_window_object_ptr->mesh = rectangular_prism(window_width, inner_trim_width, inner_trim_depth,
+		window_x_position, window_y_position, window_z_position,
+		window_x_rotation, window_y_rotation, window_z_rotation,
+		window_x_rotation_2, window_y_rotation_2, window_z_rotation_2, window_uniform_scale);
+	bm_window_object_ptr->color = vec3(0.1, 0.1, 0.1);    // assign color to object
+	bm_window_object_ptr->shader = just_shader;
+	m_window_objects.push_back(bm_window_object_ptr);      // append current basic_model object
+
 
 }
 
