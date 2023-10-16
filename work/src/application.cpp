@@ -151,9 +151,9 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_disp_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE3);
 
 
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_diff_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE4);
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_nor_gl_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE5);
-	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_disp_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//castle_brick_02_red_diff_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE4);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//castle_brick_02_red_nor_gl_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE5);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//castle_brick_02_red_disp_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
 
 	//cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//back.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
 
