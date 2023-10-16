@@ -73,35 +73,6 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     return finalTexCoords;
 }
 
-
-float shadowCalc(vec2 texCoord, vec3 lightDir)
-{
-    if ( lightDir.z >= 0.0 )
-        return 0.0;
-
-    float minLayers = 0;
-    float maxLayers = 32;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), lightDir)));
-
-    vec2 currentTexCoords = texCoord;
-    float currentDepthMapValue = texture(uHeight, currentTexCoords).r;
-    float currentLayerDepth = currentDepthMapValue;
-
-    float layerDepth = 1.0 / numLayers;
-    vec2 P = lightDir.xy / lightDir.z * heightScale;
-    vec2 deltaTexCoords = P / numLayers;
-
-    while (currentLayerDepth <= currentDepthMapValue && currentLayerDepth > 0.0)
-    {
-        currentTexCoords += deltaTexCoords;
-        currentDepthMapValue = texture(uHeight, currentTexCoords).r;
-        currentLayerDepth -= layerDepth;
-    }
-
-    float r = currentLayerDepth > currentDepthMapValue ? 0.0 : 1.0;
-    return r;
-}
-
 void main() {
 
     vec3 viewDir = normalize(v_in.TangentViewPos - v_in.TangentFragPos);
@@ -140,8 +111,6 @@ void main() {
     // diffuse
     vec3 lightDir = normalize(v_in.TangentLightPos - v_in.TangentFragPos);
     float diff = max(dot(lightDir, normal), 0.0);
-
-    //float shadow = diff > 0.0 ? shadowCalc(texCoords, lightDir) : 0.0;
     
     vec3 diffuse = diff * color;
 
@@ -155,4 +124,5 @@ void main() {
     vec3 finalColor = ambient + (diffuse + specular);
 
     fragColor = vec4(finalColor, 1.0);
+    //fragColor = texture(uTexture, texCoords);
 }

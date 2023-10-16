@@ -14,7 +14,7 @@ using namespace glm;
 using namespace std;
 
 struct basic_model {
-	GLuint shader = 0;
+	GLuint shader = 3;
 	cgra::gl_mesh mesh;
 	glm::vec3 color{ 0.7 };
 
@@ -27,14 +27,6 @@ struct basic_model {
 
 	void draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff, GLint normal, GLint height);
 };
-
-struct sky_model {
-	GLuint shader = 0;
-	cgra::gl_mesh mesh;
-
-	void draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff);
-};
-
 
 // Main application class
 //
@@ -51,6 +43,7 @@ private:
 
 	//------ Ryan's parameters start--------------------
 	GLuint just_shader;
+	GLuint jamie_shader;
 
 	float sphere_initial_draw = -0.01;
 	float cube_initial_draw = -0.01;
@@ -282,7 +275,6 @@ private:
 
 	// geometry
 	basic_model m_groundPlane;
-	sky_model m_skyPlane;
 
 
 public:

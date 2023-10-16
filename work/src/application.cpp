@@ -26,15 +26,9 @@ using namespace glm;
 
 void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff, GLint normal, GLint height) {
 
-	glm::mat4 modelTransform = glm::mat4(1.0f); // Identity matrix
-	
-	modelTransform = glm::translate(modelTransform, position);
-	modelTransform = glm::rotate(modelTransform, glm::radians(rotationAngle), rotationAxis);
-	mat4 modelview = view * modelTransform;
-	
+	//glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
+	//glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
 	glUseProgram(shader); // load shader and variables
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
-	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
 
 	vec3 lightPosition = vec3(5.0f, 10.0f, 10.0f);
 	glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, value_ptr(lightPosition));
@@ -50,24 +44,17 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 	glUniform1i(glGetUniformLocation(shader, "uNormal"), normal);
 	glUniform1i(glGetUniformLocation(shader, "uHeight"), height);
 
-	mesh.draw(); // draw
-}
-
-void sky_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff) {
-
-	glm::mat4 modelTransform = glm::mat4(1.0f); // Identity matrix
-
+	mat4 modelTransform = mat4(1.0f);
 	modelTransform = glm::translate(modelTransform, position);
 	modelTransform = glm::rotate(modelTransform, glm::radians(rotationAngle), rotationAxis);
 	mat4 modelview = view * modelTransform;
 
-	glUseProgram(shader); // load shader and variables
+	
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
+	glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(color));
 
-	glUniform1i(glGetUniformLocation(shader, "uTexture"), diff);
-
-	mesh.draw(); // draw
+	mesh.draw(); // draw    // this gl_mesh method is defined in cgra_mesh.cpp
 }
 
 
@@ -76,6 +63,10 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	shader_builder sb;
     sb.set_shader(GL_VERTEX_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_vert.glsl"));
 	sb.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_frag.glsl"));
+	jamie_shader = sb.build();
+
+	sb.set_shader(GL_VERTEX_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_vert_project.glsl"));
+	sb.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_frag_project.glsl"));
 	just_shader = sb.build();
 
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_diff_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE0);
@@ -88,11 +79,6 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_disp_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE5);
 
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//back.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
-
-	m_groundPlane.shader = just_shader;
-	m_groundPlane.mesh = geometry::plane(10);
-
-
 }
 
 
@@ -131,10 +117,15 @@ void Application::render() {
 	mat4 modelView = mat4(1.0f);
 
 	// draw the model
-	m_groundPlane.draw(view, proj, glm::vec3(0.0f, 0.0f, 5.0f), -90.0f, glm::vec3(1, 0, 0), 3, 4, 5);
-	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -5.0f, 0.0f), 0.0f, glm::vec3(1, 0, 0), 0, 1, 2);
 
-	m_skyPlane.draw(view, proj, glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec3(1, 0, 0), 0);
+	m_groundPlane.shader = jamie_shader;
+	m_groundPlane.mesh = geometry::plane(10);
+
+	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -2.5f, 5.0f), -90.0f, glm::vec3(1, 0, 0), 3, 4, 5);
+	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -2.5f, -5.0f), 90.0f, glm::vec3(1, 0, 0), 3, 4, 5);
+	m_groundPlane.draw(view, proj, glm::vec3(-5.0f, -2.5f, 0.0f), -90.0f, glm::vec3(0, 0, 1), 3, 4, 5);
+	m_groundPlane.draw(view, proj, glm::vec3(5.0f, -2.5f, 0.0f), 90.0f, glm::vec3(0, 0, 1), 3, 4, 5);
+	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -.25f, 0.0f), 0.0f, glm::vec3(1, 0, 0), 0, 1, 2);
 
 	
 	//-------- ryan's render start -----------------------------------------
@@ -142,7 +133,7 @@ void Application::render() {
 	// draw all objects
 	for (int i = 0; i < m_all_objects.size(); i++) {
 		if (m_all_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-			m_all_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(0.0, 0.0, 0.0), 0, 1, 2);
+			m_all_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(1, 0, 0), 0, 1, 2);
 			//cout << "m_all_objects[i]->shader: " << m_all_objects[i]->shader << endl;
 		}
 		else {
@@ -155,7 +146,7 @@ void Application::render() {
 	// draw log pile objects
 	for (int i = 0; i < m_log_pile_objects.size(); i++) {
 		if (m_log_pile_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-			m_log_pile_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(0.0, 0.0, 0.0), 0, 1, 2);
+			m_log_pile_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(1, 0, 0), 0, 1, 2);
 			//cout << "m_all_objects[i]->shader: " << m_all_objects[i]->shader << endl;
 		}
 		else {
@@ -168,7 +159,7 @@ void Application::render() {
 	// draw fire guard objects
 	for (int i = 0; i < m_fire_guard_objects.size(); i++) {
 		if (m_fire_guard_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-			m_fire_guard_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(0.0, 0.0, 0.0), 0, 1, 2);
+			m_fire_guard_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(1, 0, 0), 0, 1, 2);
 			//cout << "m_all_objects[i]->shader: " << m_all_objects[i]->shader << endl;
 		}
 		else {
@@ -181,7 +172,7 @@ void Application::render() {
 	// draw tree objects
 	for (int i = 0; i < m_tree_objects.size(); i++) {
 		if (m_tree_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-			m_tree_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(0.0, 0.0, 0.0), 0, 1, 2);
+			m_tree_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(1, 0, 0), 0, 1, 2);
 			//cout << "m_all_objects[i]->shader: " << m_all_objects[i]->shader << endl;
 		}
 		else {
@@ -193,7 +184,7 @@ void Application::render() {
 	// draw chair objects
 	for (int i = 0; i < m_chair_objects.size(); i++) {
 		if (m_chair_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-			m_chair_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(0.0, 0.0, 0.0), 0, 1, 2);
+			m_chair_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(1, 0, 0), 0, 1, 2);
 			//cout << "m_all_objects[i]->shader: " << m_all_objects[i]->shader << endl;
 		}
 		else {
@@ -204,7 +195,7 @@ void Application::render() {
 	// draw table objects
 	for (int i = 0; i < m_table_objects.size(); i++) {
 		if (m_table_objects[i] != nullptr) {     // check if current iteration is pointing to a null pointer
-			m_table_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(0.0, 0.0, 0.0), 0, 1, 2);
+			m_table_objects[i]->draw(view, proj, vec3(0.0, 0.0, 0.0), 0.0f, vec3(1, 0, 0), 0, 1, 2);
 			//cout << "m_all_objects[i]->shader: " << m_all_objects[i]->shader << endl;
 		}
 		else {
@@ -236,7 +227,7 @@ void Application::renderGUI() {
 
 	ImGui::SliderFloat("POM Height", &m_groundPlane.heightScale, 0.0f, 0.25f, "%.4f");
 	ImGui::SliderFloat("POM Tiling Scale", &m_groundPlane.tilingScale, 0, 10, "%.2f", 2.0f);
-	ImGui::SliderFloat("POM Max Layers", &m_groundPlane.POMmaxLayers, 0, 64, "%.2f", 2.0f);
+	ImGui::SliderFloat("POM Max Layers", &m_groundPlane.POMmaxLayers, 0, 256, "%.2f", 2.0f);
 
 	// helpful drawing options
 	ImGui::Checkbox("Show axis", &m_show_axis);
@@ -1930,7 +1921,7 @@ void Application::table(float table_top_width, float table_top_height, float tab
 		table_uniform_scale
 	);
 	bm_table_object_ptr->color = vec3(0.44, 0.18, 0.005);    // assign color to object
-	bm_table_object_ptr->shader = 3;    // assign shader to object
+	bm_table_object_ptr->shader = just_shader;    // assign shader to object
 
 	// bm_object_ptr is a basic_model*; declared application.hpp
 	// initializes current basic_model pointer with the heap allocated basic_model object that is initialized with the current gl::mesh object, called mesh_object
@@ -1951,7 +1942,7 @@ void Application::table(float table_top_width, float table_top_height, float tab
 		table_x_rotation, table_y_rotation, table_z_rotation,
 		table_x_rotation_2, table_y_rotation_2, table_z_rotation_2, table_uniform_scale);
 	bm_table_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_table_object_ptr->shader = 3;    // assign shader to object
+	bm_table_object_ptr->shader = just_shader;    // assign shader to object
 	m_table_objects.push_back(bm_table_object_ptr);      // append current basic_model object
 
 
@@ -1965,7 +1956,7 @@ void Application::table(float table_top_width, float table_top_height, float tab
 		table_x_rotation_2, table_y_rotation_2, table_z_rotation_2, table_uniform_scale);
 
 	bm_table_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_table_object_ptr->shader = 3;    // assign shader to object
+	bm_table_object_ptr->shader = just_shader;    // assign shader to object
 	m_table_objects.push_back(bm_table_object_ptr);       // append current basic_model object
 
 	// leg 3 (-,-,-)---------------------------------
@@ -1978,7 +1969,7 @@ void Application::table(float table_top_width, float table_top_height, float tab
 		table_x_rotation_2, table_y_rotation_2, table_z_rotation_2, table_uniform_scale);
 
 	bm_table_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_table_object_ptr->shader = 3;    // assign shader to object
+	bm_table_object_ptr->shader = just_shader;    // assign shader to object
 	m_table_objects.push_back(bm_table_object_ptr);      // append current basic_model object
 
 	// leg 4 (+,-,-)---------------------------------
@@ -1991,7 +1982,7 @@ void Application::table(float table_top_width, float table_top_height, float tab
 		table_x_rotation_2, table_y_rotation_2, table_z_rotation_2, table_uniform_scale);
 
 	bm_table_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_table_object_ptr->shader = 3;    // assign shader to object
+	bm_table_object_ptr->shader = just_shader;    // assign shader to object
 	m_table_objects.push_back(bm_table_object_ptr);       // append current basic_model object
 
 	//------------------------------------------------
@@ -2020,7 +2011,7 @@ void Application::chair(float seat_width, float seat_height, float seat_depth,
 		chair_uniform_scale
 	);
 	bm_chair_object_ptr->color = vec3(0.55, 0.05, 0.05);    // assign color to object
-	bm_chair_object_ptr->shader = 3;    // assign shader to object
+	bm_chair_object_ptr->shader = just_shader;    // assign shader to object
 
 	// bm_object_ptr is a basic_model*; declared application.hpp
 	// initializes current basic_model pointer with the heap allocated basic_model object that is initialized with the current gl::mesh object, called mesh_object
@@ -2041,7 +2032,7 @@ void Application::chair(float seat_width, float seat_height, float seat_depth,
 		seat_x_rotation, seat_y_rotation, seat_z_rotation,
 		seat_x_rotation_2, seat_y_rotation_2, seat_z_rotation_2, chair_uniform_scale);
 	bm_chair_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_chair_object_ptr->shader = 3;    // assign shader to object
+	bm_chair_object_ptr->shader = just_shader;    // assign shader to object
 	m_chair_objects.push_back(bm_chair_object_ptr);      // append current basic_model object
 
 
@@ -2055,7 +2046,7 @@ void Application::chair(float seat_width, float seat_height, float seat_depth,
 		seat_x_rotation_2, seat_y_rotation_2, seat_z_rotation_2, chair_uniform_scale);
 
 	bm_chair_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_chair_object_ptr->shader = 3;    // assign shader to object
+	bm_chair_object_ptr->shader = just_shader;    // assign shader to object
 	m_chair_objects.push_back(bm_chair_object_ptr);       // append current basic_model object
 
 	// leg 3 (-,-,-)---------------------------------
@@ -2068,7 +2059,7 @@ void Application::chair(float seat_width, float seat_height, float seat_depth,
 		seat_x_rotation_2, seat_y_rotation_2, seat_z_rotation_2, chair_uniform_scale);
 
 	bm_chair_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_chair_object_ptr->shader = 3;    // assign shader to object
+	bm_chair_object_ptr->shader = just_shader;    // assign shader to object
 	m_chair_objects.push_back(bm_chair_object_ptr);      // append current basic_model object
 
 	// leg 4 (+,-,-)---------------------------------
@@ -2081,7 +2072,7 @@ void Application::chair(float seat_width, float seat_height, float seat_depth,
 		seat_x_rotation_2, seat_y_rotation_2, seat_z_rotation_2, chair_uniform_scale);
 
 	bm_chair_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_chair_object_ptr->shader = 3;    // assign shader to object
+	bm_chair_object_ptr->shader = just_shader;    // assign shader to object
 	m_chair_objects.push_back(bm_chair_object_ptr);       // append current basic_model object
 
 	//------------------------------------------------
@@ -2098,7 +2089,7 @@ void Application::chair(float seat_width, float seat_height, float seat_depth,
 		seat_x_rotation_2, seat_y_rotation_2, seat_z_rotation_2, chair_uniform_scale);
 
 	bm_chair_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_chair_object_ptr->shader = 3;    // assign shader to object
+	bm_chair_object_ptr->shader = just_shader;    // assign shader to object
 	m_chair_objects.push_back(bm_chair_object_ptr);       // append current basic_model object
 
 	// leg 6 (-,-,-)---------------------------------
@@ -2111,7 +2102,7 @@ void Application::chair(float seat_width, float seat_height, float seat_depth,
 		seat_x_rotation_2, seat_y_rotation_2, seat_z_rotation_2, chair_uniform_scale);
 
 	bm_chair_object_ptr->color = vec3(0.05, 0.05, 0.05);    // assign color to object
-	bm_chair_object_ptr->shader = 3;    // assign shader to object
+	bm_chair_object_ptr->shader = just_shader;    // assign shader to object
 	m_chair_objects.push_back(bm_chair_object_ptr);       // append current basic_model object
 
 	// back rest 7 (0,-,-)---------------------------------
@@ -2124,7 +2115,7 @@ void Application::chair(float seat_width, float seat_height, float seat_depth,
 		seat_x_rotation_2, seat_y_rotation_2, seat_z_rotation_2, chair_uniform_scale);
 
 	bm_chair_object_ptr->color = vec3(0.55, 0.05, 0.05);    // assign color to object
-	bm_chair_object_ptr->shader = 3;    // assign shader to object
+	bm_chair_object_ptr->shader = just_shader;    // assign shader to object
 	m_chair_objects.push_back(bm_chair_object_ptr);       // append current basic_model object
 
 
@@ -2156,7 +2147,7 @@ void Application::fire_guard(float fire_guard_radius, int fire_guard_subdiv, int
 					curr_point.x, curr_point.y, curr_point.z,
 					0, degrees(radian_incr * 0.5) * j, 0, 0, degrees(radian_incr) * j, 0, 1);      // I hard coded rotation_2 values and uniform scale value!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				bm_fire_guard_object_ptr->color = vec3(0.3, 0.3, 0.3);    // assign color to object
-				bm_fire_guard_object_ptr->shader = 3;    // assign shader to object
+				bm_fire_guard_object_ptr->shader = just_shader;    // assign shader to object
 				m_fire_guard_objects.push_back(bm_fire_guard_object_ptr);      // append current basic_model object
 			}
 			else {          // if is odd row
@@ -2169,7 +2160,7 @@ void Application::fire_guard(float fire_guard_radius, int fire_guard_subdiv, int
 					curr_point.x, curr_point.y, curr_point.z,
 					0, degrees(radian_incr * 0.5) * j, 0, 0, degrees(radian_incr) * j + degrees(radian_incr * 0.5), 0, 1);      // I hard coded rotation_2 values and uniform scale value!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				bm_fire_guard_object_ptr->color = vec3(0.3, 0.3, 0.3);    // assign color to object
-				bm_fire_guard_object_ptr->shader = 3;    // assign shader to object
+				bm_fire_guard_object_ptr->shader = just_shader;    // assign shader to object
 				m_fire_guard_objects.push_back(bm_fire_guard_object_ptr);      // append current basic_model object
 			}
 		}
@@ -2200,14 +2191,14 @@ void Application::log_pile(int num_bottom_logs, int log_subdiv, float log_radius
 				bm_log_pile_object_ptr = new basic_model;
 				bm_log_pile_object_ptr->mesh = cylinder(log_subdiv, log_radius, log_radius, log_length, true, true, curr_x_position - (log_radius * 2 * (log_x_pos_offset - j)), curr_y_position, curr_z_position, 90, log_y_rotation, log_z_rotation);
 				bm_log_pile_object_ptr->color = vec3(0.5, 0.4, 0.35);    // assign color to object
-				bm_log_pile_object_ptr->shader = 3;    // assign shader to object
+				bm_log_pile_object_ptr->shader = just_shader;    // assign shader to object
 				m_log_pile_objects.push_back(bm_log_pile_object_ptr);      // append current basic_model object
 			}
 			// draw center log
 			bm_log_pile_object_ptr = new basic_model;
 			bm_log_pile_object_ptr->mesh = cylinder(log_subdiv, log_radius, log_radius, log_length, true, true, curr_x_position, curr_y_position, curr_z_position, 90, log_y_rotation, log_z_rotation);
 			bm_log_pile_object_ptr->color = vec3(0.5, 0.4, 0.35);    // assign color to object
-			bm_log_pile_object_ptr->shader = 3;    // assign shader to object
+			bm_log_pile_object_ptr->shader = just_shader;    // assign shader to object
 			m_log_pile_objects.push_back(bm_log_pile_object_ptr);      // append current basic_model object
 
 			// draw rightside logs
@@ -2215,7 +2206,7 @@ void Application::log_pile(int num_bottom_logs, int log_subdiv, float log_radius
 				bm_log_pile_object_ptr = new basic_model;
 				bm_log_pile_object_ptr->mesh = cylinder(log_subdiv, log_radius, log_radius, log_length, true, true, curr_x_position + (log_radius * 2 * (log_x_pos_offset - j)), curr_y_position, curr_z_position, 90, log_y_rotation, log_z_rotation);
 				bm_log_pile_object_ptr->color = vec3(0.5, 0.4, 0.35);    // assign color to object
-				bm_log_pile_object_ptr->shader = 3;    // assign shader to object
+				bm_log_pile_object_ptr->shader = just_shader;    // assign shader to object
 				m_log_pile_objects.push_back(bm_log_pile_object_ptr);      // append current basic_model object
 			}
 			curr_y_position += log_radius * 1.66;
@@ -2226,7 +2217,7 @@ void Application::log_pile(int num_bottom_logs, int log_subdiv, float log_radius
 				bm_log_pile_object_ptr = new basic_model;
 				bm_log_pile_object_ptr->mesh = cylinder(log_subdiv, log_radius, log_radius, log_length, true, true, curr_x_position - (log_radius * 2 * (log_x_pos_offset - j)) + log_radius, curr_y_position, curr_z_position, 90, log_y_rotation, log_z_rotation);
 				bm_log_pile_object_ptr->color = vec3(0.5, 0.4, 0.35);    // assign color to object
-				bm_log_pile_object_ptr->shader = 3;    // assign shader to object
+				bm_log_pile_object_ptr->shader = just_shader;    // assign shader to object
 				m_log_pile_objects.push_back(bm_log_pile_object_ptr);      // append current basic_model object
 			}
 			// draw rightside logs
@@ -2234,7 +2225,7 @@ void Application::log_pile(int num_bottom_logs, int log_subdiv, float log_radius
 				bm_log_pile_object_ptr = new basic_model;
 				bm_log_pile_object_ptr->mesh = cylinder(log_subdiv, log_radius, log_radius, log_length, true, true, curr_x_position + (log_radius * 2 * (log_x_pos_offset - j)) - log_radius, curr_y_position, curr_z_position, 90, log_y_rotation, log_z_rotation);
 				bm_log_pile_object_ptr->color = vec3(0.5, 0.4, 0.35);    // assign color to object
-				bm_log_pile_object_ptr->shader = 3;    // assign shader to object
+				bm_log_pile_object_ptr->shader = just_shader;    // assign shader to object
 				m_log_pile_objects.push_back(bm_log_pile_object_ptr);      // append current basic_model object
 			}
 			curr_y_position += log_radius * 1.66;
