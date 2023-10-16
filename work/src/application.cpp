@@ -24,7 +24,14 @@ using namespace cgra;
 using namespace glm;
 
 
-void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
+void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff, GLint normal, GLint height) {
+
+	glm::mat4 modelTransform = glm::mat4(1.0f); // Identity matrix
+	
+	modelTransform = glm::translate(modelTransform, position);
+	modelTransform = glm::rotate(modelTransform, glm::radians(rotationAngle), rotationAxis);
+
+
 	mat4 modelview = view * modelTransform;
 	
 	glUseProgram(shader); // load shader and variables
@@ -42,9 +49,9 @@ void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
 	glUniform1f(glGetUniformLocation(shader, "tilingScale"), tilingScale);
 	glUniform1f(glGetUniformLocation(shader, "POMmaxLayers"), POMmaxLayers);
 
-	glUniform1i(glGetUniformLocation(shader, "uTexture"), 0);
-	glUniform1i(glGetUniformLocation(shader, "uNormal"), 1);
-	glUniform1i(glGetUniformLocation(shader, "uHeight"), 2);
+	glUniform1i(glGetUniformLocation(shader, "uTexture"), diff);
+	glUniform1i(glGetUniformLocation(shader, "uNormal"), normal);
+	glUniform1i(glGetUniformLocation(shader, "uHeight"), height);
 
 	mesh.draw(); // draw
 }
@@ -57,11 +64,18 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	sb.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_frag.glsl"));
 	GLuint shader = sb.build();
 
+
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_diff_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE0);
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_nor_gl_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE1);
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_disp_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE2);
+
+
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_diff_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE3);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_nor_gl_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE4);
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_disp_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE5);
+
 	m_groundPlane.shader = shader;
-	m_groundPlane.mesh = geometry::plane(m_groundPlane.scale, vec3(0, 0, 0));
+	m_groundPlane.mesh = geometry::plane(10);
 }
 
 
@@ -97,8 +111,11 @@ void Application::render() {
 	if (m_show_axis) drawAxis(view, proj);
 	glPolygonMode(GL_FRONT_AND_BACK, (m_showWireframe) ? GL_LINE : GL_FILL);
 
+	mat4 modelView = mat4(1.0f);
+
 	// draw the model
-	m_groundPlane.draw(view, proj);
+	m_groundPlane.draw(view, proj, glm::vec3(0.0f, 0.0f, 5.0f), -90.0f, glm::vec3(1, 0, 0), 3, 4, 5);
+	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -5.0f, 0.0f), 0.0f, glm::vec3(1, 0, 0), 0, 1, 2);
 }
 
 

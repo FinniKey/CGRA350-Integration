@@ -1,37 +1,35 @@
 #include "geometry.h"
-
 using namespace std;
 using namespace cgra;
 using namespace glm;
 
-gl_mesh geometry::plane(float size, const glm::vec3& origin) {
+gl_mesh geometry::plane(float size) {
 	MeshData meshData;
 
-	// Define the vertices for a single plane (two triangles).
+	float halfSize = size * 0.5f;
+
+
 	meshData.vertices = {
-		glm::vec3(-size * 0.5f, 0.0f, -size * 0.5f) + origin,
-		glm::vec3(size * 0.5f, 0.0f, -size * 0.5f) + origin,
-		glm::vec3(size * 0.5f, 0.0f, size * 0.5f) + origin,
-		glm::vec3(-size * 0.5f, 0.0f, size * 0.5f) + origin
+	vec3(-halfSize, 0.0f, -halfSize),
+	vec3(halfSize, 0.0f, -halfSize),
+	vec3(halfSize, 0.0f, halfSize),
+	vec3(-halfSize, 0.0f, halfSize)
 	};
 
-	// Define the normals for a single plane (all point upwards).
 	meshData.normals = {
-		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(0.0f, 1.0f, 0.0f)
+	vec3(0.0f, 1.0f, 0.0f),
+	vec3(0.0f, 1.0f, 0.0f),
+	vec3(0.0f, 1.0f, 0.0f),
+	vec3(0.0f, 1.0f, 0.0f),
 	};
 
-	// Define the UV coordinates for a single plane.
 	meshData.uvs = {
-		glm::vec2(0.0f, 0.0f),
-		glm::vec2(1.0f, 0.0f),
-		glm::vec2(1.0f, 1.0f),
-		glm::vec2(0.0f, 1.0f)
+		vec2(0.0f, 0.0f),
+		vec2(1.0f, 0.0f),
+		vec2(1.0f, 1.0f),
+		vec2(0.0f, 1.0f)
 	};
 
-	// Define the indices for the two triangles forming the plane.
 	meshData.indices = { 0, 1, 2, 0, 2, 3 };
 
 	mesh_builder mb;

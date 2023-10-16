@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include "opengl.hpp"
 #include "cgra/cgra_mesh.hpp"
+#include <glm/gtc/constants.hpp>
 
 using namespace glm;
 using namespace std;
@@ -16,5 +17,6 @@ struct MeshData {
 
 
 namespace geometry {
-	cgra::gl_mesh plane(float size, const glm::vec3& origin);
+	cgra::gl_mesh plane(float size);
+
 }
