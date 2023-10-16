@@ -26,9 +26,8 @@ using namespace glm;
 
 
 void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
-	// shader matrix setup
 	mat4 modelview = view * modelTransform;
-	
+
 	glUseProgram(shader); // load shader and variables
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
@@ -48,9 +47,10 @@ void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
 	glUniform1i(glGetUniformLocation(shader, "uNormal"), 1);
 	glUniform1i(glGetUniformLocation(shader, "uHeight"), 2);
 
+
+
 	glUniform1i(glGetUniformLocation(shader, "uSearchRegion"), searchRegion);
 	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
-
 
 	// setup the depth map
 	static unsigned int depthMapFBO;
@@ -60,6 +60,7 @@ void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
 	vec2 mapSize = vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT);
 	glUniform2fv(glGetUniformLocation(shader, "mapSize"), 1, value_ptr(mapSize));
 	static unsigned int depthMap;
+
 
 	if (!depthGen) {
 		glGenFramebuffers(1, &depthMapFBO);
@@ -83,7 +84,9 @@ void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		depthGen = true;
 	}
-	////cout << depthMapFBO << endl;
+	//cout << depthMapFBO << endl;
+
+
 
 	// render to the depth map
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -101,28 +104,33 @@ void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
 
 	glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix;
 
-	//// Send our transformation to the currently bound shader,
-	//// in the "MVP" uniform
+	// Send our transformation to the currently bound shader,
+	// in the "MVP" uniform
 	glUniformMatrix4fv(glGetUniformLocation(shader, "depthMVP"), 1, GL_FALSE, value_ptr(depthMVP));
 
-	//// reset everything so it renders normally
+	mesh.draw();
+
+	
+
+	// reset everything so it renders normally
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//
+	
 	mat4 proj2 = perspective(1.f, windowWidth / windowHeight, 0.1f, 1000.f);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj2));
 
 	glViewport(0, 0, windowWidth, windowHeight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//glUniform1i(glGetUniformLocation(shader, "depthMap"), 4);
-	//glActiveTexture(GL_TEXTURE0);
+	glUniform1i(glGetUniformLocation(shader, "depthMap"), 4);
+	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
 
 	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 0);
 	if (depthMode) glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
 
-	drawCylinder();
 	mesh.draw();
+	
+
 	
 }
 

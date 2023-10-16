@@ -210,8 +210,12 @@ void main() {
 
         vec3 specular = vec3(0.2) * spec;
 
-        vec3 finalColor = ambient + (shadow) * (diffuse + specular);
+        vec3 finalColor = ambient + (1.0 - shadow) * (diffuse + specular);
 
         fragColor = vec4(finalColor, 1.0);
+
+        // draw shadow map onto object
+		//float depthVal = texture(depthMap, v_in.textureCoord).r;
+		//fragColor = vec4(vec3(depthVal), 1.0);
     }
 }
