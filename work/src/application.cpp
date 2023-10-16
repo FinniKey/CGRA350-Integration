@@ -166,9 +166,9 @@ void Application::spawnBoids(int numBoids) {
 	for (int i = 0; i < numBoids; i++) {
 		boid b;
 		b.id = i;
-		b.model.mesh = geometry::plane(0.5);
+		b.model.mesh = geometry::plane(0.2);
 		b.pos = linearRand(vec3(-1), vec3(1));
-		b.vel = vec3(0);
+		b.vel = vec3(0.1);
 		b.acc = vec3(0);
 		boids.push_back(b);
 	}
@@ -334,7 +334,10 @@ void Application::render() {
 
 	for (boid &b : boids) {
 		
-		
+		/*cout << "pos " << b.pos.x << " " << b.pos.y << " " << b.pos.z << endl;
+		cout << "vel " << b.vel.x << " " << b.vel.y << " " << b.vel.z << endl;
+		cout << "acc " << b.acc.x << " " << b.acc.y << " " << b.acc.z << endl;*/
+
 		
 
 		b.model.shader = jamie_shader;
@@ -347,7 +350,7 @@ void Application::render() {
 
 		vector<boid> neighs;
 		// get neighs
-		float sightRadius = 0.1;
+		float sightRadius = 1.0;
 		for (boid o : boids) {
 			float d = distance(b.pos, o.pos);
 			if (b.id != o.id && d <= sightRadius) {
@@ -355,7 +358,7 @@ void Application::render() {
 			}
 		}
 		
-		cout << "neigh num " << neighs.size() << endl;
+		//cout << "neigh num " << neighs.size() << endl;
 
 		// avoidance
 		for (boid o : neighs) {
@@ -383,44 +386,45 @@ void Application::render() {
 			}
 			avgBVel /= neighs.size();
 			alignment = avgBVel - b.vel;
+			alignment *= 5;
+
+			cout << "alignment " << alignment.x << alignment.y << alignment.z << endl;
 
 			
 		}
-		//b.acc = (avoidance + cohesion + alignment);
+		b.acc = (avoidance + cohesion + alignment);
 		
 
 		
 
 		// clamp and adjust positions
-		float minAcc = -0.01;
-		float maxAcc = 0.01;
-		float minSpeed = 0.05;
-		float maxSpeed = 0.5;
+		float minSpeed = 0.005;
+		float maxSpeed = 0.07;
 
-		//b.vel += b.acc;
+		b.vel += b.acc;
 
 		float speed = length(b.vel);
 
 		if (speed > maxSpeed) speed = maxSpeed;
 		if (speed < minSpeed) speed = minSpeed;
+		//if (speed < scene->minSpeed() * 1.5 && m_team < 0) speed = scene->minSpeed() * 1.5;
+		//if (speed > scene->maxSpeed() * 1.5 && m_team < 0) speed = scene->maxSpeed() * 1.5;
 
-		b.vel = speed * normalize(b.vel);
+	
+		b.vel = vec3(speed) * normalize(b.vel);
 
-		cout << "pos " << b.pos.x << " " << b.pos.y << " " << b.pos.z << endl;
-		cout << "vel " << b.vel.x << " " << b.vel.y << " " << b.vel.z << endl;
-		cout << "acc " << b.acc.x << " " << b.acc.y << " " << b.acc.z << endl;
-
+	
 		b.pos += b.vel;
 		
 		// clamp position
 		// change later to be based on distance
 		vec3 sceneBound = vec3(5.0);
-		/*if (b.pos.x < -sceneBound.x || b.pos.x > sceneBound.x
+		if (b.pos.x < -sceneBound.x || b.pos.x > sceneBound.x
 			|| b.pos.y < 1 || b.pos.y > sceneBound.y
 			|| b.pos.z < -sceneBound.z || b.pos.z > sceneBound.z) {
 
 			b.vel += (vec3(0) - b.pos) / vec3(100 / 0.4);
-		}*/
+		}
 		/*if (b.pos.x > sceneBound.x) b.pos.x = -sceneBound.x;
 		if (b.pos.x < -sceneBound.x) b.pos.x = sceneBound.x;
 

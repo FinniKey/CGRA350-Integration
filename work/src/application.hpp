@@ -341,7 +341,7 @@ public:
 		vec3 acc = vec3(0);
 	};
 
-	int boidNum = 5;
+	int boidNum = 20;
 	vector<boid> boids;
 	void spawnBoids(int numBoids);
 
