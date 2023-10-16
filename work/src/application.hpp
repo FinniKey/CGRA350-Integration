@@ -115,7 +115,7 @@ private:
 
 
 	// tree parameters start----------------------
-	bool is_tree = false;
+	bool is_tree = true;
 	int tree_subdiv = 12;
 	float tree_height = 2.57;
 	float tree_top_radius = 0.036;
@@ -162,7 +162,7 @@ private:
 	// --------- rectangular prism end ----------------------------------
 
 	// ----chair start --------------------------
-	bool is_chair = false;
+	bool is_chair = true;
 	float seat_width = 1.2;
 	float seat_height = 0.02;
 	float seat_depth = 0.25;
@@ -187,7 +187,7 @@ private:
 
 
 	// ----table start --------------------------
-	bool is_table = false;
+	bool is_table = true;
 	float table_initial_draw = -0.01;
 	float table_top_width = 0.363;
 	float table_top_height = 0.026;
@@ -211,7 +211,7 @@ private:
 
 
 	//---- fire guard start ---------------
-	bool is_fire_guard = false;
+	bool is_fire_guard = true;
 	float fire_guard_radius = 1.0;
 	int fire_guard_subdiv = 42;
 	int num_brick_rows = 5;
@@ -230,7 +230,7 @@ private:
 
 
 	// ---- log pile start-------------
-	bool is_log_pile = false;
+	bool is_log_pile = true;
 	float log_pile_initial_draw = -0.01;
 	int num_bottom_logs = 2;
 	int log_subdiv = 12;
@@ -249,7 +249,7 @@ private:
 
 
 	//---window start-------
-	bool is_window = false;
+	bool is_window = true;
 	float window_width = 1;
 	float window_height = 0.7;
 	float window_depth = 0.027;
@@ -385,8 +385,8 @@ public:
 		float log_x_position, float log_y_position, float log_z_position,
 		float log_x_rotation, float log_y_rotation, float log_z_rotation);
 
-<<<<<<< Updated upstream
-=======
+
+
 	void window(float window_width, float window_height, float window_depth,
 		float window_x_position, float window_y_position, float window_z_position,
 		float window_x_rotation, float window_y_rotation, float window_z_rotation,
@@ -396,6 +396,6 @@ public:
 
 
 
->>>>>>> Stashed changes
+
 	//-------- ryan's methods ends ---------------------------
 };
