@@ -48,7 +48,7 @@ public:
 private:
 	vector<GLuint> textures;
 
-	vec3 Origin = vec3(0);  //Origin point of the Particle System
+	vec3 Origin = vec3(25,5,5);  //Origin point of the Particle System
 
 	float particle_lifetime = 0.95; //How long the particles last
 
@@ -178,7 +178,7 @@ public:
 			float radius = 5 * std::sqrt(dist(gen));
 
 			// Calculate the initial position within a circle
-			p.Position = vec3(radius * std::cos(angle), height(gen), radius * std::sin(angle));
+			p.Position = this->Origin + vec3(radius * std::cos(angle), height(gen), radius * std::sin(angle));
 
 			particles.push_back(p);
 		}
@@ -242,7 +242,7 @@ public:
 			float radius = 5 * std::sqrt(dist(gen));
 
 			// Calculate the initial position within a circle
-			p.Position = vec3(radius * std::cos(angle), height(gen), radius * std::sin(angle));
+			p.Position = this->Origin + vec3(radius * std::cos(angle), height(gen), radius * std::sin(angle));
 
 			particles.push_back(p);
 		}
@@ -303,7 +303,7 @@ public:
 				float radius = rad(gen);
 
 				// Calculate the initial position within a circle
-				p.Position = vec3(radius * std::cos(angle), 5, radius * std::sin(angle));
+				p.Position = this->Origin + vec3(radius * std::cos(angle), 5, radius * std::sin(angle));
 
 				p.Velocity = vec3(0, 12, 0);
 				p.life = std::max(0.0, dist(gen));
@@ -340,7 +340,7 @@ public:
 				float radius = dist(gen);
 
 				// Calculate the initial position within a circle
-				p.Position = vec3(radius * std::cos(angle) * dist(gen), dist(gen), radius * std::sin(angle) * dist(gen));
+				p.Position = this->Origin + vec3(radius * std::cos(angle) * dist(gen), dist(gen), radius * std::sin(angle) * dist(gen));
 				p.Velocity = vec3(0,std::max(0.0,dist(gen)*6), 0);
 				p.life = dist(gen);
 				p.scaling = 1;
