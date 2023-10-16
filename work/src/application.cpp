@@ -64,7 +64,7 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 		glGenTextures(1, &depthMap);        // Generate only one texture
 
 		// Configure depthMap texture
-		glActiveTexture(GL_TEXTURE3); // Use texture unit 3
+		glActiveTexture(GL_TEXTURE6); // Use texture unit 3
 		glBindTexture(GL_TEXTURE_2D, depthMap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
