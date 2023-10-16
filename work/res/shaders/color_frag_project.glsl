@@ -84,7 +84,7 @@ void main() {
         float shadow = ShadowCalculation(f_in.FragPosLightSpace, bias);
 
 		// output to the frambuffer
-		fb_color = vec4(shadow * color, 1);
+		fb_color = vec4((1.0 - shadow) * color, 1);
 
 		// draw shadow map onto object
 		//float depthVal = texture(depthMap, f_in.textureCoord).r;
