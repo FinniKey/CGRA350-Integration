@@ -125,7 +125,7 @@ void basic_model::draw(const glm::mat4 &view, const glm::mat4 proj) {
 	glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 0);
 	if (depthMode) glUniform1f(glGetUniformLocation(shader, "uDepthMode"), 1);
 
-	mesh.draw();
+	mesh.draw(); 
 }
 
 
