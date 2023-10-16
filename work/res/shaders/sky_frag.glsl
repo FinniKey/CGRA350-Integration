@@ -3,9 +3,10 @@ out vec4 FragColor;
 
 in vec3 TexCoords;
 
-uniform samplerCube skybox;
+uniform sampler2D uTexture;
 
 void main()
 {    
-    FragColor = texture(skybox, TexCoords);
+    //FragColor = texture(uTexture, TexCoords.xy);
+    FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f); // Yellow color
 }

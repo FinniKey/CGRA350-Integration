@@ -30,14 +30,11 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 	
 	modelTransform = glm::translate(modelTransform, position);
 	modelTransform = glm::rotate(modelTransform, glm::radians(rotationAngle), rotationAxis);
-
-
 	mat4 modelview = view * modelTransform;
 	
 	glUseProgram(shader); // load shader and variables
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
-	glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(color));
 
 	vec3 lightPosition = vec3(5.0f, 10.0f, 10.0f);
 	glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, value_ptr(lightPosition));
@@ -56,6 +53,23 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 	mesh.draw(); // draw
 }
 
+void sky_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff) {
+
+	glm::mat4 modelTransform = glm::mat4(1.0f); // Identity matrix
+
+	modelTransform = glm::translate(modelTransform, position);
+	modelTransform = glm::rotate(modelTransform, glm::radians(rotationAngle), rotationAxis);
+	mat4 modelview = view * modelTransform;
+
+	glUseProgram(shader); // load shader and variables
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, false, value_ptr(modelview));
+
+	glUniform1i(glGetUniformLocation(shader, "uTexture"), diff);
+
+	mesh.draw(); // draw
+}
+
 
 Application::Application(GLFWwindow *window) : m_window(window) {
 	
@@ -64,6 +78,10 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	sb.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//color_frag.glsl"));
 	GLuint shader = sb.build();
 
+	shader_builder sb2;
+	sb2.set_shader(GL_VERTEX_SHADER, CGRA_SRCDIR + std::string("//res//shaders//sky_vert.glsl"));
+	sb2.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//sky_frag.glsl"));
+	GLuint skyShader = sb2.build();
 
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_diff_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE0);
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rocky_trail_nor_gl_4k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE1);
@@ -74,8 +92,13 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_nor_gl_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE4);
 	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//rock_wall_10_disp_2k.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE5);
 
+	cgra::rgba_image(CGRA_SRCDIR + string("//res//textures//back.jpg")).uploadTexture(GL_RGB8, GL_TEXTURE6);
+
 	m_groundPlane.shader = shader;
 	m_groundPlane.mesh = geometry::plane(10);
+
+	m_skyPlane.shader = shader;
+	m_skyPlane.mesh = geometry::plane(20);
 }
 
 
@@ -116,6 +139,8 @@ void Application::render() {
 	// draw the model
 	m_groundPlane.draw(view, proj, glm::vec3(0.0f, 0.0f, 5.0f), -90.0f, glm::vec3(1, 0, 0), 3, 4, 5);
 	m_groundPlane.draw(view, proj, glm::vec3(0.0f, -5.0f, 0.0f), 0.0f, glm::vec3(1, 0, 0), 0, 1, 2);
+
+	m_skyPlane.draw(view, proj, glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec3(1, 0, 0), 0);
 }
 
 

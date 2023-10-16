@@ -16,12 +16,6 @@ using namespace std;
 struct basic_model {
 	GLuint shader = 0;
 	cgra::gl_mesh mesh;
-	glm::vec3 color{0.7};
-
-	//GLint diffuse = -1;
-	//GLint normal = -1;
-	//GLint height = -1;
-	//GLint specular = -1;
 
 	//shader parameters
 	float scale = 5;
@@ -32,14 +26,13 @@ struct basic_model {
 	void draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff, GLint normal, GLint height);
 };
 
-//struct sky_model {
-//	GLuint shader = 0;
-//	cgra::gl_mesh mesh;
-//
-//	GLint diffuse = -1;
-//
-//	void draw(const glm::mat4& view, const glm::mat4 proj);
-//};
+struct sky_model {
+	GLuint shader = 0;
+	cgra::gl_mesh mesh;
+
+	void draw(const glm::mat4& view, const glm::mat4 proj, const glm::vec3& position, const float rotationAngle, const glm::vec3& rotationAxis, GLint diff);
+};
+
 
 // Main application class
 //
@@ -65,10 +58,7 @@ private:
 
 	// geometry
 	basic_model m_groundPlane;
-	//sky_model m_wall1;
-	//sky_model m_wall2;
-	//sky_model m_wall3;
-	//sky_model m_wall4;
+	sky_model m_skyPlane;
 
 
 public:
