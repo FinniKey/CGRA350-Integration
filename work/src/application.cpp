@@ -64,17 +64,13 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 		glGenTextures(1, &depthMap);        // Generate only one texture
 
 		// Configure depthMap texture
-		glActiveTexture(GL_TEXTURE6); // Use texture unit 3
+		glActiveTexture(GL_TEXTURE6); // Use texture unit 6
 		glBindTexture(GL_TEXTURE_2D, depthMap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
 		// Bind depthMap to the framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
@@ -105,7 +101,7 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj, const glm::v
 
 	glUniformMatrix4fv(glGetUniformLocation(shader, "depthMVP"), 1, GL_FALSE, value_ptr(depthMVP));
 
-	mesh.draw();
+	//mesh.draw();
 
 	//reset everything so it renders normally
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
