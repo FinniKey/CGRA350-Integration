@@ -166,9 +166,9 @@ void Application::spawnBoids(int numBoids) {
 	for (int i = 0; i < numBoids; i++) {
 		boid b;
 		b.id = i;
-		b.model.mesh = geometry::plane(0.2);
+		b.model.mesh = geometry::plane(0.1);
 		b.pos = linearRand(vec3(-1), vec3(1));
-		b.vel = vec3(0.1);
+		b.vel = vec3(0.001);
 		b.acc = vec3(0);
 		boids.push_back(b);
 	}
@@ -350,7 +350,7 @@ void Application::render() {
 
 		vector<boid> neighs;
 		// get neighs
-		float sightRadius = 1.0;
+		float sightRadius = 0.5;
 		for (boid o : boids) {
 			float d = distance(b.pos, o.pos);
 			if (b.id != o.id && d <= sightRadius) {
@@ -362,10 +362,10 @@ void Application::render() {
 
 		// avoidance
 		for (boid o : neighs) {
-			float weight = 1;
+			float weight = 1.0;
 			glm::vec3 displacement = b.pos - o.pos;
 			float distance = length(displacement);
-			avoidance += weight * (displacement / (distance * distance));
+			avoidance += (displacement / (distance * distance));
 		}
 
 		if (neighs.size() > 0) {
@@ -386,9 +386,8 @@ void Application::render() {
 			}
 			avgBVel /= neighs.size();
 			alignment = avgBVel - b.vel;
-			alignment *= 5;
 
-			cout << "alignment " << alignment.x << alignment.y << alignment.z << endl;
+			//cout << "alignment " << alignment.x << alignment.y << alignment.z << endl;
 
 			
 		}
@@ -398,8 +397,8 @@ void Application::render() {
 		
 
 		// clamp and adjust positions
-		float minSpeed = 0.005;
-		float maxSpeed = 0.07;
+		float minSpeed = 0.0005;
+		float maxSpeed = 0.05;
 
 		b.vel += b.acc;
 
@@ -418,12 +417,17 @@ void Application::render() {
 		
 		// clamp position
 		// change later to be based on distance
-		vec3 sceneBound = vec3(5.0);
+		vec3 sceneBound = vec3(3.0);
 		if (b.pos.x < -sceneBound.x || b.pos.x > sceneBound.x
-			|| b.pos.y < 1 || b.pos.y > sceneBound.y
+			|| b.pos.y < -sceneBound.y || b.pos.y > sceneBound.y
 			|| b.pos.z < -sceneBound.z || b.pos.z > sceneBound.z) {
 
 			b.vel += (vec3(0) - b.pos) / vec3(100 / 0.4);
+		}
+
+		if (b.pos.y < 0) {
+			b.vel.y = -b.vel.y;
+			b.pos.y = 0;
 		}
 		/*if (b.pos.x > sceneBound.x) b.pos.x = -sceneBound.x;
 		if (b.pos.x < -sceneBound.x) b.pos.x = sceneBound.x;
