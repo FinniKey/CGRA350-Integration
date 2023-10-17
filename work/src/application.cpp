@@ -434,7 +434,13 @@ void Application::render() {
 			}
 			else {
 				b.leaderTime--;
-				speedMult = 2.0;
+				// to start
+				if (b.leaderTime < 150 && b.leaderTime >= 110) speedMult = 1.5;
+				else if (b.leaderTime < 110 && b.leaderTime >= 100) speedMult = 2;
+				else if (b.leaderTime < 100 && b.leaderTime >= 90) speedMult = 2.5;
+				else if (b.leaderTime < 90 && b.leaderTime >= 55) speedMult = 3;
+				else if (b.leaderTime < 55 && b.leaderTime >= 30) speedMult = 2;
+				else if (b.leaderTime < 30 && b.leaderTime >= 0) speedMult = 1.5;
 				
 			}
 		}
