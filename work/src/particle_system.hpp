@@ -48,11 +48,11 @@ public:
 private:
 	vector<GLuint> textures;
 
-	vec3 Origin = vec3(25,5,5);  //Origin point of the Particle System
+	vec3 Origin = vec3(0,-0.25,0);  //Origin point of the Particle System
 
-	float particle_lifetime = 0.95; //How long the particles last
+	float particle_lifetime = 0.25; //How long the particles last
 
-	int particle_limit = 16002; //The maximum number of particles
+	int particle_limit = 1600; //The maximum number of particles
 
 	int particle_burst_amnt = 200;
 
@@ -175,7 +175,7 @@ public:
 			float angle = dist(gen);
 
 			// Calculate a random radius within the maximum distance (max_dist)
-			float radius = 5 * std::sqrt(dist(gen));
+			float radius = 1 * std::sqrt(dist(gen));
 
 			// Calculate the initial position within a circle
 			p.Position = this->Origin + vec3(radius * std::cos(angle), height(gen), radius * std::sin(angle));
@@ -239,7 +239,7 @@ public:
 			float angle = dist(gen);
 
 			// Calculate a random radius within the maximum distance (max_dist)
-			float radius = 5 * std::sqrt(dist(gen));
+			float radius = 1 * std::sqrt(dist(gen));
 
 			// Calculate the initial position within a circle
 			p.Position = this->Origin + vec3(radius * std::cos(angle), height(gen), radius * std::sin(angle));
@@ -313,8 +313,6 @@ public:
 			timer = 0;
 		}
 
-		
-
 
 		for (Particle& p: particles)
 		{
@@ -337,18 +335,25 @@ public:
 				float angle = rad(gen);
 
 				// Calculate a random radius within the maximum distance (max_dist)
-				float radius = dist(gen);
+				float radius = .2 * dist(gen);
 
 				// Calculate the initial position within a circle
-				p.Position = this->Origin + vec3(radius * std::cos(angle) * dist(gen), dist(gen), radius * std::sin(angle) * dist(gen));
-				p.Velocity = vec3(0,std::max(0.0,dist(gen)*6), 0);
+				p.Position = this->Origin + vec3(radius * std::cos(angle) * dist(gen), 0, radius * std::sin(angle) * dist(gen));
+				p.Velocity = vec3(0,std::max(dist(gen)/3,dist(gen)*3), dist(gen)/3);
 				p.life = dist(gen);
 				p.scaling = 1;
 			}
 			
+	
 
 		
 		}
+
+
+
+
+
+
 
 		glGenVertexArrays(1, &vao); // VAO stores information about how the buffers are set up
 		glGenBuffers(1, &vbo); // VBO stores the vertex data
@@ -395,11 +400,15 @@ public:
 		// Enable blending
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
+		glEnable(GL_DEPTH_TEST);
 
 		// Render objects with additive blending
 		// Set colors with appropriate alpha values
 		glDepthMask(GL_FALSE);
-		glPointSize(25);
+
+		
+
+
 		// Get the location of the uniform variable in your shader
 		GLint textureLocation = glGetUniformLocation(shader, "fireTexture");
 
@@ -407,11 +416,21 @@ public:
 		glActiveTexture(GL_TEXTURE0);
 
 
+		vec3 cam_location;
+		cam_location.x = view[3][0];
+		cam_location.y = view[3][1];
+		cam_location.z = view[3][2];
+
+
+
 		for (int i =0; i < particles.size(); i++)
 		{ 
 		
 			// Bind the texture to the active texture unit
 			glBindTexture(GL_TEXTURE_2D, textures.at(particles.at(i).frame));
+			float dist_to_cam = glm::distance(particles.at(i).Position, cam_location);
+
+			glPointSize(25 * (1/dist_to_cam));
 
 			// Associate the uniform variable in the shader with the texture unit
 			glUniform1i(textureLocation, 0);

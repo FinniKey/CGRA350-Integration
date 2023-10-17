@@ -39,7 +39,7 @@ namespace cgra {
 		//
 		glBindVertexArray(m.vao);
 
-		
+
 		// VBO (single buffer, interleaved)
 		//
 		glBindBuffer(GL_ARRAY_BUFFER, m.vbo);
@@ -49,15 +49,23 @@ namespace cgra {
 		// this buffer will use location=0 when we use our VAO
 		glEnableVertexAttribArray(0);
 		// tell opengl how to treat data in location=0 - the data is treated in lots of 3 (3 floats = vec3)
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(mesh_vertex), (void *)(offsetof(mesh_vertex, pos)));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(mesh_vertex), (void*)(offsetof(mesh_vertex, pos)));
 
 		// do the same thing for Normals but bind it to location=1
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(mesh_vertex), (void *)(offsetof(mesh_vertex, norm)));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(mesh_vertex), (void*)(offsetof(mesh_vertex, norm)));
 
 		// do the same thing for UVs but bind it to location=2 - the data is treated in lots of 2 (2 floats = vec2)
 		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(mesh_vertex), (void *)(offsetof(mesh_vertex, uv)));
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(mesh_vertex), (void*)(offsetof(mesh_vertex, uv)));
+
+		// tangents
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(mesh_vertex), (void*)(offsetof(mesh_vertex, tangent)));
+
+		// bitangents
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(mesh_vertex), (void*)(offsetof(mesh_vertex, bitangent)));
 
 
 		// IBO

@@ -39,6 +39,8 @@ namespace cgra {
 		glm::vec3 pos{0};
 		glm::vec3 norm{0};
 		glm::vec2 uv{0};
+		glm::vec3 tangent{0};
+		glm::vec3 bitangent{0};
 	};
 
 
@@ -56,13 +58,37 @@ namespace cgra {
 
 		template <size_t N, size_t M>
 		explicit mesh_builder(const mesh_vertex(&vertData)[N], const mesh_vertex(&idxData)[M], GLenum mode_ = GL_TRIANGLES)
-			: vertices(vertData, vertData+N), indices(idxData, idxData+M), mode(mode_) { }
+			: vertices(vertData, vertData + N), indices(idxData, idxData + M), mode(mode_) { }
 
 		GLuint push_vertex(mesh_vertex v) {
-			auto size = vertices.size();
-			assert(size == decltype(size)(GLuint(size)));
 			vertices.push_back(v);
-			return GLuint(size);
+
+			if (vertices.size() % 3 == 0) {
+
+				auto& v0 = vertices[vertices.size() - 3];
+				auto& v1 = vertices[vertices.size() - 2];
+				auto& v2 = vertices[vertices.size() - 1];
+
+				glm::vec3 deltaPos1 = v1.pos - v0.pos;
+				glm::vec3 deltaPos2 = v2.pos - v0.pos;
+
+				glm::vec2 deltaUV1 = v1.uv - v0.uv;
+				glm::vec2 deltaUV2 = v2.uv - v0.uv;
+
+				float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+				glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+				glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+
+				v0.tangent += tangent;
+				v1.tangent += tangent;
+				v2.tangent += tangent;
+
+				v0.bitangent += bitangent;
+				v1.bitangent += bitangent;
+				v2.bitangent += bitangent;
+			}
+
+			return GLuint(vertices.size() - 1);
 		}
 
 		void push_index(GLuint i) {
@@ -89,6 +115,4 @@ namespace cgra {
 			std::cout << std::endl;
 		}
 	};
-
 }
-
