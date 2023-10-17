@@ -335,6 +335,7 @@ public:
 
 	struct boid {
 		int id = -1;
+		int team = 0;
 		basic_model model;
 		vec3 pos = vec3(0);
 		vec3 vel = vec3(0);
@@ -342,13 +343,14 @@ public:
 
 	};
 
-	int boidNum = 20;
+	int boidNum = 15;
+	int teamNum = 3;
 	vector<boid> boids;
 	void spawnBoids(int numBoids);
-	float searchR = 0.5f;
+	float searchR = 0.7f;
 	float avoidanceWeight = 1.0;
-	float cohesionWeight = 1.0;
-	float alignmentWeight = 5.0;
+	float cohesionWeight = 3.0;
+	float alignmentWeight = 3.0;
 
 	// setup
 	Application(GLFWwindow *);

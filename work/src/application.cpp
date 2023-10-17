@@ -163,14 +163,17 @@ Application::Application(GLFWwindow *window) : m_window(window) {
 void Application::spawnBoids(int numBoids) {
 	boids.clear();
 	cout << "spawn boid" << endl;
-	for (int i = 0; i < numBoids; i++) {
-		boid b;
-		b.id = i;
-		b.model.mesh = geometry::plane(0.08);
-		b.pos = linearRand(vec3(-1), vec3(1));
-		b.vel = vec3(0.001);
-		b.acc = vec3(0);
-		boids.push_back(b);
+	for (int t = 1; t <= teamNum; t++) {
+		for (int i = 0; i < numBoids; i++) {
+			boid b;
+			b.id = i;
+			b.team = t;
+			b.model.mesh = geometry::plane(0.08);
+			b.pos = linearRand(vec3(-1), vec3(1));
+			b.vel = vec3(0.001);
+			b.acc = vec3(0);
+			boids.push_back(b);
+		}
 	}
 }
 
@@ -332,6 +335,7 @@ void Application::render() {
 
 	// --------- ryan's render end --------------------------------------
 
+	float timestamp = 0.2f;
 	for (boid &b : boids) {
 		
 		/*cout << "pos " << b.pos.x << " " << b.pos.y << " " << b.pos.z << endl;
@@ -349,58 +353,70 @@ void Application::render() {
 		glm::vec3 alignment = glm::vec3(0);
 
 		vector<boid> neighs;
+		vector<boid> teamNeighs;
+
 		// get neighs
 		float sightRadius = searchR;
-		for (boid o : boids) {
+		for (boid &o : boids) {
 			float d = distance(b.pos, o.pos);
-			if (b.id != o.id && d <= sightRadius) {
-				neighs.push_back(o);
+			// if within radius
+			if (d <= sightRadius) {
+				if (b.id != o.id && b.team == o.team) {
+					neighs.push_back(o);
+					teamNeighs.push_back(o);
+				}
+				else if (b.team != o.team) {
+					neighs.push_back(o);
+				}
 			}
 		}
 		
 		//cout << "neigh num " << neighs.size() << endl;
 
 		// avoidance
-		for (boid o : neighs) {
+		for (boid &o : neighs) {
 			float weight = 1.0;
 			glm::vec3 displacement = b.pos - o.pos;
 			float distance = length(displacement);
 			avoidance += (displacement / (distance * distance));
 		}
 
-		if (neighs.size() > 0) {
+		if (teamNeighs.size() > 0) {
 
 			//cohesion
 			glm::vec3 avgBPos = glm::vec3(0);
 
-			for (boid curB : neighs) {
+			for (boid &curB : teamNeighs) {
 				avgBPos += curB.pos;
 			}
-			avgBPos /= neighs.size();
+			avgBPos /= teamNeighs.size();
 			cohesion = avgBPos - b.pos;
 
 			// alignment
 			vec3 avgBVel = vec3(0);
-			for (boid curB : neighs) {
+			for (boid &curB : teamNeighs) {
 				avgBVel += curB.vel;
 			}
-			avgBVel /= neighs.size();
+			avgBVel /= teamNeighs.size();
 			alignment = avgBVel - b.vel;
 
 			//cout << "alignment " << alignment.x << alignment.y << alignment.z << endl;
 
 			
 		}
+
+		vec3 randomDir = linearRand(vec3(-0.0001), vec3(0.0001));
+
 		b.acc = (avoidanceWeight * avoidance + cohesionWeight * cohesion + alignmentWeight * alignment);
 		
 
 		
 
 		// clamp and adjust positions
-		float minSpeed = 0.0005;
-		float maxSpeed = 0.05;
+		float minSpeed = 0.005;
+		float maxSpeed = 0.5;
 
-		b.vel += b.acc;
+		b.vel += b.acc * timestamp;
 
 		float speed = length(b.vel);
 
@@ -413,21 +429,20 @@ void Application::render() {
 		b.vel = vec3(speed) * normalize(b.vel);
 
 	
-		b.pos += b.vel;
+		b.pos += b.vel * timestamp;
 		
 		// clamp position
-		// change later to be based on distance
-		vec3 sceneBound = vec3(3.0);
+		vec3 sceneBound = vec3(2.3);
 		if (b.pos.x < -sceneBound.x || b.pos.x > sceneBound.x
 			|| b.pos.y < -sceneBound.y || b.pos.y > sceneBound.y
 			|| b.pos.z < -sceneBound.z || b.pos.z > sceneBound.z) {
 
-			b.vel += (vec3(0) - b.pos) / vec3(100 / 0.4);
+			b.vel += distance(vec3(0), b.pos) * (vec3(0) - b.pos) / vec3(100 / 0.4);
 		}
 
-		if (b.pos.y < 0) {
+		if (b.pos.y < 0.7) {
 			b.vel.y = -b.vel.y;
-			b.pos.y = 0;
+			b.pos.y = 0.7;
 		}
 		/*if (b.pos.x > sceneBound.x) b.pos.x = -sceneBound.x;
 		if (b.pos.x < -sceneBound.x) b.pos.x = sceneBound.x;
@@ -486,7 +501,7 @@ void Application::renderGUI() {
 	if (ImGui::SliderInt("Boid num", &boidNum, 0, 30)) {
 		spawnBoids(boidNum);
 	}
-	ImGui::SliderFloat("Neighbours Radius", &searchR, 0.001, 2.0);
+	ImGui::SliderFloat("Neighbours Radius", &searchR, 0.001, 1.2);
 	ImGui::SliderFloat("Avoidance Weight", &avoidanceWeight, 0, 10.0);
 	ImGui::SliderFloat("Cohesion Weight", &cohesionWeight, 0, 10.0);
 	ImGui::SliderFloat("Alignment Weight", &alignmentWeight, 0, 10.0);
