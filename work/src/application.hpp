@@ -334,16 +334,21 @@ public:
 
 
 	struct boid {
-		int id;
+		int id = -1;
 		basic_model model;
 		vec3 pos = vec3(0);
 		vec3 vel = vec3(0);
 		vec3 acc = vec3(0);
+
 	};
 
 	int boidNum = 20;
 	vector<boid> boids;
 	void spawnBoids(int numBoids);
+	float searchR = 1.5f;
+	float avoidanceWeight = 1.0;
+	float cohesionWeight = 1.0;
+	float alignmentWeight = 1.0;
 
 	// setup
 	Application(GLFWwindow *);

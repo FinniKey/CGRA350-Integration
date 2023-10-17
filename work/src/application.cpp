@@ -350,7 +350,7 @@ void Application::render() {
 
 		vector<boid> neighs;
 		// get neighs
-		float sightRadius = 0.5;
+		float sightRadius = searchR;
 		for (boid o : boids) {
 			float d = distance(b.pos, o.pos);
 			if (b.id != o.id && d <= sightRadius) {
@@ -391,7 +391,7 @@ void Application::render() {
 
 			
 		}
-		b.acc = (avoidance + cohesion + alignment);
+		b.acc = (avoidanceWeight * avoidance + cohesionWeight * cohesion + alignmentWeight * alignment);
 		
 
 		
@@ -483,9 +483,13 @@ void Application::renderGUI() {
 
 	// boids stuff starts
 
-	if (ImGui::SliderInt("Boid num", &boidNum, 0, 10)) {
+	if (ImGui::SliderInt("Boid num", &boidNum, 0, 30)) {
 		spawnBoids(boidNum);
 	}
+	ImGui::SliderFloat("Neighbours Radius", &searchR, 0.001, 2.0);
+	ImGui::SliderFloat("Avoidance Weight", &avoidanceWeight, 0, 10.0);
+	ImGui::SliderFloat("Cohesion Weight", &cohesionWeight, 0, 10.0);
+	ImGui::SliderFloat("Alignment Weight", &alignmentWeight, 0, 10.0);
 
 	// boids stuff ends
 
