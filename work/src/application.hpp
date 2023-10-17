@@ -345,10 +345,10 @@ public:
 	int boidNum = 20;
 	vector<boid> boids;
 	void spawnBoids(int numBoids);
-	float searchR = 1.5f;
+	float searchR = 0.5f;
 	float avoidanceWeight = 1.0;
 	float cohesionWeight = 1.0;
-	float alignmentWeight = 1.0;
+	float alignmentWeight = 5.0;
 
 	// setup
 	Application(GLFWwindow *);

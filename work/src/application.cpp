@@ -166,7 +166,7 @@ void Application::spawnBoids(int numBoids) {
 	for (int i = 0; i < numBoids; i++) {
 		boid b;
 		b.id = i;
-		b.model.mesh = geometry::plane(0.1);
+		b.model.mesh = geometry::plane(0.08);
 		b.pos = linearRand(vec3(-1), vec3(1));
 		b.vel = vec3(0.001);
 		b.acc = vec3(0);
