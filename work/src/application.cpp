@@ -381,10 +381,13 @@ void Application::render() {
 			avoidance += (displacement / (distance * distance));
 		}
 
+		glm::vec3 avgBPos = glm::vec3(0);
+		vec3 avgBVel = vec3(0);
+
 		if (teamNeighs.size() > 0) {
 
 			//cohesion
-			glm::vec3 avgBPos = glm::vec3(0);
+			
 
 			for (boid &curB : teamNeighs) {
 				avgBPos += curB.pos;
@@ -393,7 +396,7 @@ void Application::render() {
 			cohesion = avgBPos - b.pos;
 
 			// alignment
-			vec3 avgBVel = vec3(0);
+			
 			for (boid &curB : teamNeighs) {
 				avgBVel += curB.vel;
 			}
@@ -405,16 +408,43 @@ void Application::render() {
 			
 		}
 
-		vec3 randomDir = linearRand(vec3(-0.0001), vec3(0.0001));
+		// leader code
+		if (!b.leader) {
+			float eccentricity = length(avgBPos / sightRadius);
+			float boidFlockDepth = dot( ( cohesion / length(cohesion) ), ( b.vel / length(b.vel) ) );
+			// if the boid is further to the front than the back
+			if (boidFlockDepth > 0) {
+
+				std::default_random_engine generator;
+				std::normal_distribution<float> distribution(0.5, 0.01);
+				float n = distribution(generator);
+
+				if (eccentricity > ( cohesionWeight * n )) {
+					b.leader = true;
+				}
+			}
+		}
+
+		float speedMult = 1.0;
+		if (b.leader) {
+			// if youve run out of leader time
+			if (b.leaderTime == 0) {
+				b.leader = false;
+				b.leaderTime = 150;
+			}
+			else {
+				b.leaderTime--;
+				speedMult = 2.0;
+				
+			}
+		}
 
 		b.acc = (avoidanceWeight * avoidance + cohesionWeight * cohesion + alignmentWeight * alignment);
 		
 
-		
-
 		// clamp and adjust positions
 		float minSpeed = 0.005;
-		float maxSpeed = 0.5;
+		float maxSpeed = 0.2;
 
 		b.vel += b.acc * timestamp;
 
@@ -426,7 +456,7 @@ void Application::render() {
 		//if (speed > scene->maxSpeed() * 1.5 && m_team < 0) speed = scene->maxSpeed() * 1.5;
 
 	
-		b.vel = vec3(speed) * normalize(b.vel);
+		b.vel = speedMult * vec3(speed) * normalize(b.vel);
 
 	
 		b.pos += b.vel * timestamp;

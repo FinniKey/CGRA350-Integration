@@ -340,6 +340,8 @@ public:
 		vec3 pos = vec3(0);
 		vec3 vel = vec3(0);
 		vec3 acc = vec3(0);
+		bool leader = false;
+		int leaderTime = 150;
 
 	};
 
